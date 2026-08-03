@@ -1,6 +1,53 @@
 @import "tailwindcss";
 
 :root {
+  color-scheme: light;
+  --bg: #f5f4f8;
+  --panel: #ffffff;
+  --panel-raised: #f8f7fb;
+  --panel-hover: #efedf4;
+  --canvas-surround: #e9e7ef;
+  --border: #dedbe5;
+  --border-strong: #b9b4c4;
+  --text: #24212b;
+  --text-muted: #676170;
+  --text-dim: #918b99;
+  --accent: #7356b5;
+  --accent-strong: #5d409f;
+  --accent-muted: #eee9fa;
+  --accent-soft: #7458b4;
+  --accent-contrast: #ffffff;
+  --danger: #b94d5d;
+  --warning: #9a6a19;
+  --success: #7356b5;
+  --focus: #7356b5;
+  --track-video: #806bc0;
+  --track-audio: #4f887e;
+  --track-text: #a65c7f;
+  --track-overlay: #5b7394;
+  --canvas-grid: rgb(37 31 51 / 0.055);
+  --canvas-glow: rgb(115 86 181 / 0.12);
+  --canvas-border: #c9c4d3;
+  --canvas-shadow: 0 20px 70px rgb(39 30 58 / 0.18);
+  --timeline-grid: rgb(37 31 51 / 0.07);
+  --clip-border: rgb(255 255 255 / 0.55);
+  --clip-text: #ffffff;
+  --selected-border: #5d409f;
+  --playhead: #5d409f;
+  --plan-surface: #f6f1ff;
+  --inspection-surface: #f2f0f6;
+  --dialog-backdrop: rgb(35 29 48 / 0.32);
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --header-height: 52px;
+  --timeline-height: 286px;
+  font-family: "Geist Variable", system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+:root[data-theme="dark"] {
   color-scheme: dark;
   --bg: #0d0c10;
   --panel: #151419;
@@ -15,6 +62,8 @@
   --accent: #8c7ac4;
   --accent-strong: #a895df;
   --accent-muted: #2d283d;
+  --accent-soft: #a895df;
+  --accent-contrast: #16121f;
   --danger: #db7f88;
   --warning: #d6a85b;
   --success: #8c7ac4;
@@ -22,14 +71,58 @@
   --track-video: #7361ab;
   --track-audio: #4f8179;
   --track-text: #a66f86;
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 14px;
-  --header-height: 52px;
-  --timeline-height: 286px;
-  font-family: "Geist Variable", system-ui, sans-serif;
-  background: var(--bg);
-  color: var(--text);
+  --track-overlay: #5b7394;
+  --canvas-grid: rgb(255 255 255 / 0.018);
+  --canvas-glow: #1b1820;
+  --canvas-border: #393540;
+  --canvas-shadow: 0 20px 70px rgb(0 0 0 / 0.36);
+  --timeline-grid: rgb(255 255 255 / 0.018);
+  --clip-border: rgb(255 255 255 / 0.16);
+  --clip-text: #f6f2ff;
+  --selected-border: #e2d9ff;
+  --playhead: #e7dcff;
+  --plan-surface: #1a1721;
+  --inspection-surface: #0d0b10;
+  --dialog-backdrop: rgb(5 5 7 / 0.68);
+}
+
+:root[data-theme="lilac"] {
+  color-scheme: light;
+  --bg: #f7f3ff;
+  --panel: #fffaff;
+  --panel-raised: #f8f1ff;
+  --panel-hover: #eee5ff;
+  --canvas-surround: #eee8fb;
+  --border: #dfd3f0;
+  --border-strong: #b9a7d5;
+  --text: #292038;
+  --text-muted: #70617f;
+  --text-dim: #988ba6;
+  --accent: #7658bd;
+  --accent-strong: #6244a4;
+  --accent-muted: #eee5ff;
+  --accent-soft: #7658bd;
+  --accent-contrast: #ffffff;
+  --danger: #b94d68;
+  --warning: #9b6b20;
+  --success: #7658bd;
+  --focus: #7658bd;
+  --track-video: #8068c4;
+  --track-audio: #4f8d83;
+  --track-text: #a75d86;
+  --track-overlay: #637ba0;
+  --canvas-grid: rgb(75 48 119 / 0.06);
+  --canvas-glow: rgb(118 88 189 / 0.14);
+  --canvas-border: #cbbbe1;
+  --canvas-shadow: 0 20px 70px rgb(80 51 123 / 0.18);
+  --timeline-grid: rgb(75 48 119 / 0.06);
+  --clip-border: rgb(255 255 255 / 0.58);
+  --clip-text: #ffffff;
+  --selected-border: #6244a4;
+  --playhead: #6244a4;
+  --plan-surface: #f5edff;
+  --inspection-surface: #f2ebfb;
+  --dialog-backdrop: rgb(53 35 80 / 0.28);
 }
 
 * {
@@ -117,7 +210,7 @@ button,
   place-items: center;
   border-radius: var(--radius-sm);
   background: var(--accent);
-  color: #16121f;
+  color: var(--accent-contrast);
 }
 
 .project-name {
@@ -139,6 +232,35 @@ button,
 
 .topbar-actions {
   justify-content: flex-end;
+}
+
+.theme-control {
+  display: inline-flex;
+  min-height: 30px;
+  align-items: center;
+  gap: 5px;
+  padding: 0 6px 0 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--panel-raised);
+  color: var(--text-muted);
+}
+
+.theme-select {
+  min-height: 28px;
+  max-width: 78px;
+  padding: 0 17px 0 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  font-size: 11px;
+}
+
+.theme-select option {
+  background: var(--panel);
+  color: var(--text);
 }
 
 .locale-toggle {
@@ -214,7 +336,7 @@ button,
   padding: 0 13px;
   border-color: var(--accent);
   background: var(--accent);
-  color: #17131e;
+  color: var(--accent-contrast);
   font-weight: 650;
 }
 
@@ -335,7 +457,7 @@ button:disabled {
   aspect-ratio: 16 / 10;
   place-items: center;
   overflow: hidden;
-  background: #0c0b0e;
+  background: var(--inspection-surface);
   color: var(--text-dim);
 }
 
@@ -383,7 +505,7 @@ button:disabled {
   overflow: hidden;
   padding: 28px;
   background-image:
-    radial-gradient(circle at 50% 35%, #1b1820 0, transparent 48%);
+    radial-gradient(circle at 50% 35%, var(--canvas-glow) 0, transparent 48%);
 }
 
 .preview-canvas {
@@ -391,9 +513,9 @@ button:disabled {
   max-width: 100%;
   max-height: 100%;
   overflow: hidden;
-  border: 1px solid #393540;
-  background: var(--project-background, #121116);
-  box-shadow: 0 20px 70px rgb(0 0 0 / 0.36);
+  border: 1px solid var(--canvas-border);
+  background: var(--project-background, var(--panel));
+  box-shadow: var(--canvas-shadow);
   container-type: size;
 }
 
@@ -612,7 +734,7 @@ button:disabled {
 
 .message.error {
   border-color: color-mix(in srgb, var(--danger) 48%, var(--border));
-  color: #f0b7bc;
+  color: var(--danger);
 }
 
 .ai-suggestions {
@@ -643,7 +765,7 @@ button:disabled {
   padding: 11px;
   border: 1px solid color-mix(in srgb, var(--accent) 48%, var(--border));
   border-radius: var(--radius-md);
-  background: #1a1721;
+  background: var(--plan-surface);
 }
 
 .plan-card h3 {
@@ -673,7 +795,7 @@ button:disabled {
   padding: 8px;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  background: rgb(255 255 255 / 0.025);
+  background: color-mix(in srgb, var(--panel) 82%, var(--accent) 18%);
 }
 
 .plan-diff strong {
@@ -681,7 +803,7 @@ button:disabled {
 }
 
 .plan-diff .plan-risk {
-  color: #f0c98c;
+  color: var(--warning);
 }
 
 .plan-diff .plan-visual-check {
@@ -698,7 +820,7 @@ button:disabled {
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   overflow: hidden;
-  background: #0d0b10;
+  background: var(--inspection-surface);
 }
 
 .ai-inspection-frame img {
@@ -818,7 +940,7 @@ button:disabled {
   display: grid;
   grid-template-columns: 148px minmax(0, 1fr);
   min-height: 54px;
-  border-bottom: 1px solid #242229;
+  border-bottom: 1px solid var(--border);
 }
 
 .track-label {
@@ -848,7 +970,7 @@ button:disabled {
   min-width: 0;
   background-size: 18px 18px;
   background-image:
-    linear-gradient(to right, rgb(255 255 255 / 0.018) 1px, transparent 1px);
+    linear-gradient(to right, var(--timeline-grid) 1px, transparent 1px);
 }
 
 .timeline-clip {
@@ -857,9 +979,9 @@ button:disabled {
   height: 42px;
   min-width: 8px;
   overflow: hidden;
-  border: 1px solid rgb(255 255 255 / 0.16);
+  border: 1px solid var(--clip-border);
   border-radius: var(--radius-sm);
-  color: #f6f2ff;
+  color: var(--clip-text);
   cursor: grab;
   user-select: none;
 }
@@ -878,12 +1000,12 @@ button:disabled {
 }
 
 .timeline-clip[data-kind="overlay"] {
-  background: #5b7394;
+  background: var(--track-overlay);
 }
 
 .timeline-clip[data-selected="true"] {
-  border-color: #e2d9ff;
-  box-shadow: 0 0 0 1px #e2d9ff;
+  border-color: var(--selected-border);
+  box-shadow: 0 0 0 1px var(--selected-border);
 }
 
 .clip-title {
@@ -926,7 +1048,7 @@ button:disabled {
   top: 0;
   bottom: 0;
   width: 1px;
-  background: #e7dcff;
+  background: var(--playhead);
   pointer-events: none;
 }
 
@@ -938,7 +1060,7 @@ button:disabled {
   width: 9px;
   height: 8px;
   border-radius: 2px;
-  background: #e7dcff;
+  background: var(--playhead);
 }
 
 .notice {
@@ -963,7 +1085,7 @@ button:disabled {
   inset: 0;
   place-items: center;
   padding: 20px;
-  background: rgb(5 5 7 / 0.68);
+  background: var(--dialog-backdrop);
   backdrop-filter: blur(8px);
 }
 

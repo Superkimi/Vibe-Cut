@@ -7,11 +7,13 @@ import {
   DownloadSimple,
   FilmStrip,
   GearSix,
+  PaintBrush,
   UploadSimple,
 } from "@phosphor-icons/react";
 import { IconButton } from "@/components/ui/IconButton";
 import { useEditorStore } from "@/store/editor-store";
 import { useI18n } from "@/i18n";
+import { themeOptions, useTheme } from "@/theme";
 
 export function TopBar() {
   const project = useEditorStore((state) => state.project);
@@ -22,7 +24,16 @@ export function TopBar() {
   const setNotice = useEditorStore((state) => state.setNotice);
   const exportProjectArchive = useEditorStore((state) => state.exportProjectArchive);
   const importProjectArchive = useEditorStore((state) => state.importProjectArchive);
+  const selectClip = useEditorStore((state) => state.selectClip);
   const { locale, setLocale, t } = useI18n();
+  const { theme, setTheme } = useTheme();
+
+  const openProjectSettings = () => {
+    // Project settings live in the canvas inspector. Clear a clip selection so
+    // the inspector shows canvas settings instead of the last selected clip.
+    selectClip(null);
+    window.dispatchEvent(new CustomEvent("vibecut:open-inspector"));
+  };
 
   const downloadArchive = async () => {
     try {
@@ -93,8 +104,24 @@ export function TopBar() {
         <IconButton
           icon={GearSix}
           label={t("project.settings")}
-          onClick={() => setNotice(t("project.settingsNotice"))}
+          onClick={openProjectSettings}
         />
+        <label className="theme-control" title={t("theme.select")}>
+          <PaintBrush size={15} aria-hidden="true" />
+          <span className="sr-only">{t("theme.select")}</span>
+          <select
+            className="theme-select"
+            aria-label={t("theme.select")}
+            value={theme}
+            onChange={(event) => setTheme(event.currentTarget.value as typeof theme)}
+          >
+            {themeOptions.map((option) => (
+              <option key={option.id} value={option.id}>
+                {t(option.labelKey)}
+              </option>
+            ))}
+          </select>
+        </label>
         <div className="locale-toggle" role="group" aria-label={t("language.toggle")}>
           <button
             type="button"

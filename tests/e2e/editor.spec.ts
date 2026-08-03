@@ -61,6 +61,36 @@ test("switches the editor between English and Chinese and persists the choice", 
   await expect(page.locator("html")).toHaveAttribute("lang", "en");
 });
 
+test("opens project settings in the inspector and persists the selected theme", async ({
+  page,
+}) => {
+  await expect(page.getByRole("combobox", { name: "Theme" })).toHaveValue("light");
+
+  await page
+    .locator('input[type="file"]')
+    .setInputFiles(path.join(process.cwd(), "tests/fixtures/sample.svg"));
+  await expect(page.getByRole("button", { name: "Select sample.svg" })).toBeVisible();
+  await page.getByRole("button", { name: "Select sample.svg" }).click();
+
+  await page.getByRole("button", { name: "Project settings" }).click();
+  await expect(page.getByRole("tab", { name: "Inspector" })).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
+  await expect(page.getByLabel("Width")).toBeVisible();
+
+  const theme = page.getByRole("combobox", { name: "Theme" });
+  await theme.selectOption("dark");
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  await page.reload();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+
+  await theme.selectOption("lilac");
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "lilac");
+  await theme.selectOption("light");
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+});
+
 test("creates, reviews, and atomically applies an AI edit plan", async ({
   page,
 }) => {
