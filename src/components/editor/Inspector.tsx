@@ -42,6 +42,8 @@ function NumericField({
 
 function ClipInspector({ clip }: { clip: VibeClip }) {
   const commitOperations = useEditorStore((state) => state.commitOperations);
+  const currentTime = useEditorStore((state) => state.currentTime);
+  const project = useEditorStore((state) => state.project);
   const { t } = useI18n();
   const patch = (next: Extract<EditOperation, { op: "updateClip" }>["patch"]) =>
     commitOperations(t("edit.update", { name: clip.name }), [
@@ -92,6 +94,87 @@ function ClipInspector({ clip }: { clip: VibeClip }) {
             }
           />
         </div>
+      </section>
+      <section className="inspector-section">
+        <h2 className="section-heading">{t("inspector.animation")}</h2>
+        <p className="field-label">
+          {t("inspector.keyframesCount", { count: clip.keyframes?.length ?? 0 })}
+        </p>
+        <button
+          type="button"
+          className="secondary-button"
+          onClick={() => {
+            const time = Math.max(0, Math.min(clip.duration, currentTime - clip.timelineStart));
+            const keyframes = [...(clip.keyframes ?? [])].filter((keyframe) => Math.abs(keyframe.time - time) > 0.001);
+            keyframes.push({
+              time,
+              interpolation: "smooth",
+              properties: {
+                x: clip.transform.x,
+                y: clip.transform.y,
+                rotation: clip.transform.rotation,
+                scaleX: clip.transform.scaleX,
+                scaleY: clip.transform.scaleY,
+                opacity: clip.opacity,
+              },
+            });
+            patch({ keyframes });
+          }}
+        >
+          {t("inspector.addKeyframe")}
+        </button>
+        <div className="field-grid">
+          <div className="field">
+            <label htmlFor="clip-blend-mode">{t("inspector.blendMode")}</label>
+            <select
+              id="clip-blend-mode"
+              className="select-input"
+              value={clip.blendMode ?? "normal"}
+              onChange={(event) => patch({ blendMode: event.currentTarget.value as "normal" | "screen" | "multiply" | "overlay" | "soft-light" })}
+            >
+              {["normal", "screen", "multiply", "overlay", "soft-light"].map((mode) => (
+                <option key={mode} value={mode}>{mode}</option>
+              ))}
+            </select>
+          </div>
+          {clip.type === "text" ? (
+            <div className="field">
+              <label htmlFor="clip-role">{t("inspector.role")}</label>
+              <select
+                id="clip-role"
+                className="select-input"
+                value={clip.role ?? "title"}
+                onChange={(event) => patch({ role: event.currentTarget.value as "title" | "caption" | "subtitle" })}
+              >
+                <option value="title">{t("inspector.title")}</option>
+                <option value="caption">{t("inspector.caption")}</option>
+                <option value="subtitle">{t("inspector.subtitle")}</option>
+              </select>
+            </div>
+          ) : null}
+        </div>
+        {clip.type === "media" ? (
+          <div className="field">
+            <label htmlFor="clip-effect">{t("inspector.effect")}</label>
+            <select
+              id="clip-effect"
+              className="select-input"
+              value={clip.effects?.[0]?.type ?? "none"}
+              onChange={(event) => {
+                const type = event.currentTarget.value;
+                patch({
+                  effects: type === "none" ? [] : [{ id: `${clip.id}-effect`, type: type as "vignette" | "grayscale" | "sepia" | "sharpen" | "drop-shadow", enabled: true, amount: 0.5 }],
+                });
+              }}
+            >
+              <option value="none">{t("inspector.none")}</option>
+              <option value="grayscale">{t("inspector.grayscale")}</option>
+              <option value="sepia">{t("inspector.sepia")}</option>
+              <option value="drop-shadow">{t("inspector.dropShadow")}</option>
+            </select>
+          </div>
+        ) : null}
+        <span className="field-label">{t("inspector.frameHint", { fps: project.settings.fps })}</span>
       </section>
       <section className="inspector-section">
         <h2 className="section-heading">{t("inspector.transform")}</h2>

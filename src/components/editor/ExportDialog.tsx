@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { CheckCircle, DownloadSimple, SpinnerGap, X } from "@phosphor-icons/react";
 import { exportProject, type ExportProgress } from "@/core/export/export-project";
 import { useEditorStore } from "@/store/editor-store";
@@ -32,6 +32,7 @@ export function ExportDialog() {
   const [progress, setProgress] = useState<ExportProgress | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
+  const controllerRef = useRef<AbortController | null>(null);
   const { t } = useI18n();
 
   useEffect(() => {
@@ -53,11 +54,14 @@ export function ExportDialog() {
     setError(null);
     setDone(false);
     setProgress({ phase: "prepare", progress: 0 });
+    const controller = new AbortController();
+    controllerRef.current = controller;
     try {
       const result = await exportProject({
         project,
         assetUrls,
         onProgress: setProgress,
+        signal: controller.signal,
       });
       const url = URL.createObjectURL(result.blob);
       const anchor = document.createElement("a");
@@ -68,10 +72,14 @@ export function ExportDialog() {
       setDone(true);
       setProgress({ phase: "finalize", progress: 1 });
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : t("error.exportFailed"));
+      setError(caught instanceof DOMException && caught.name === "AbortError" ? t("export.cancelled") : caught instanceof Error ? caught.message : t("error.exportFailed"));
       setProgress(null);
+    } finally {
+      controllerRef.current = null;
     }
   };
+
+  const cancelExport = () => controllerRef.current?.abort();
 
   const busy = progress !== null && progress.progress < 1 && !error;
   return (
@@ -124,10 +132,9 @@ export function ExportDialog() {
           <button
             type="button"
             className="secondary-button"
-            disabled={busy}
-            onClick={() => setOpen(false)}
+            onClick={() => (busy ? cancelExport() : setOpen(false))}
           >
-            {t("action.close")}
+            {busy ? t("action.cancel") : t("action.close")}
           </button>
           <button
             type="button"

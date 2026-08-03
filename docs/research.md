@@ -1,14 +1,16 @@
 # Reference research
 
-Reference snapshots reviewed on 2026-07-29:
+Reference snapshots reviewed on 2026-08-03:
 
 - OpenCut `4d8c49ed0706c4dc145361e01c6b1f1a87cbb863`
 - OpenCut classic, official current-use branch at the time of review
 - Clypra `c86ea26894661402b5f642aa939aa0799799c745`
 - Local pi-web model configuration and provider test implementation
+- Timeline Studio / ai-video-editor `13221113cbb1222f4e0cd08fe7367e86bd70156b`
+- Palmier Pro `8c0ae39ef7dfd0955514900da6dadafb945dd4f9`
 
-All three reference projects are MIT licensed. Vibe Cut is a new implementation
-that adopts architectural lessons without copying product code.
+Vibe Cut is a new implementation that adopts architectural lessons without
+copying product code; license boundaries for each reference are listed below.
 
 ## What Vibe Cut takes from OpenCut
 
@@ -43,6 +45,30 @@ package. Those parts are not portable to a hosted Web product.
 
 Vibe Cut does not reuse pi sessions, its agent runtime, or its configuration
 files. The assistant is purpose-built around the video edit-plan schema.
+
+## What Vibe Cut takes from Timeline Studio
+
+- Browser-native composition for captions, overlays/PIP, masks, keyframes,
+  effects, transitions, and deterministic WebCodecs export.
+- Portable project archives and local model/capability fallback patterns.
+- A single visual scene model shared by preview and export.
+
+Timeline Studio is MIT licensed at the repository level, but individual model
+weights and third-party assets have their own licenses. Vibe Cut does not copy
+its source or bundle those weights.
+
+## What Vibe Cut takes from Palmier Pro
+
+- Frame-oriented timing, compact timeline context, @-style object references,
+  semantic media inspection, structured mutation deltas, and visual inspection
+  frames after an AI edit.
+- One domain mutation path for manual UI and agent tools, with undo and
+  cancellation-aware jobs.
+
+Palmier Pro is GPLv3 and is macOS/Swift-specific. Its source is not copied into
+Vibe Cut's MIT codebase; only product and protocol ideas are independently
+reimplemented. Palmier's generative AI backend and model licenses are also not
+assumed by this project.
 
 ## Product benchmark
 

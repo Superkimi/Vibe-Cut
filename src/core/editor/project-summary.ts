@@ -24,6 +24,9 @@ export interface ProjectSummary {
     duration: number;
     sourceStart: number;
     text?: string;
+    role?: string;
+    keyframes?: number;
+    effects?: string[];
   }>;
   assets: Array<{
     id: string;
@@ -35,6 +38,13 @@ export interface ProjectSummary {
     playheadTime: number;
     selectedClipIds: string[];
   };
+  transitions: Array<{
+    id: string;
+    fromClipId: string;
+    toClipId: string;
+    type: string;
+    duration: number;
+  }>;
 }
 
 export interface EditorContext {
@@ -70,6 +80,9 @@ export function summarizeProject(
       duration: clip.duration,
       sourceStart: clip.sourceStart,
       ...(clip.type === "text" ? { text: clip.text } : {}),
+      ...(clip.type === "text" && clip.role ? { role: clip.role } : {}),
+      ...(clip.keyframes?.length ? { keyframes: clip.keyframes.length } : {}),
+      ...(clip.effects?.length ? { effects: clip.effects.map((effect) => effect.type) } : {}),
     })),
     assets: project.assets.map(({ id, name, kind, duration }) => ({
       id,
@@ -83,5 +96,12 @@ export function summarizeProject(
         project.clips.some((clip) => clip.id === id),
       ),
     },
+    transitions: project.transitions.map(({ id, fromClipId, toClipId, type, duration }) => ({
+      id,
+      fromClipId,
+      toClipId,
+      type,
+      duration,
+    })),
   };
 }

@@ -1,6 +1,7 @@
 import { editPlanSchema, type EditOperation, type EditPlan } from "@/core/schema/edit-plan";
 import { projectSchema, type VibeClip, type VibeProject } from "@/core/schema/project";
 import { EditPlanError } from "./errors";
+import { createMutationReceipt, type MutationReceipt } from "./mutation-receipt";
 
 const EPSILON = 1 / 1_000;
 
@@ -82,13 +83,16 @@ function assertProjectInvariants(project: VibeProject): void {
   }
 
   for (const transition of project.transitions) {
-    if (
-      !clips.has(transition.fromClipId) ||
-      !clips.has(transition.toClipId)
-    ) {
+    if (project.transitions.filter((candidate) => candidate.id === transition.id).length > 1) {
+      throw new EditPlanError(`Transition "${transition.id}" is duplicated.`);
+    }
+    if (!clips.has(transition.fromClipId) || !clips.has(transition.toClipId)) {
       throw new EditPlanError(
         `Transition "${transition.id}" references a missing clip.`,
       );
+    }
+    if (transition.fromClipId === transition.toClipId) {
+      throw new EditPlanError(`Transition "${transition.id}" cannot target the same clip.`);
     }
   }
 }
@@ -103,6 +107,12 @@ function patchClip(clip: VibeClip, patch: Extract<EditOperation, { op: "updateCl
     adjustments: patch.adjustments
       ? { ...clip.adjustments, ...patch.adjustments }
       : clip.adjustments,
+    style:
+      clip.type === "text" && patch.style
+        ? { ...clip.style, ...patch.style }
+        : clip.type === "text"
+          ? clip.style
+          : undefined,
   };
 
   if (clip.type === "media" && "volume" in patch && patch.volume !== undefined) {
@@ -110,6 +120,9 @@ function patchClip(clip: VibeClip, patch: Extract<EditOperation, { op: "updateCl
   }
   if (clip.type === "text" && "text" in patch && patch.text !== undefined) {
     next.text = patch.text;
+  }
+  if (clip.type === "text" && "role" in patch && patch.role !== undefined) {
+    next.role = patch.role;
   }
 
   return next as VibeClip;
@@ -170,6 +183,48 @@ function applyOperation(project: VibeProject, operation: EditOperation): void {
         throw new EditPlanError(`Asset "${operation.clip.assetId}" does not exist.`);
       }
       project.clips.push(operation.clip);
+      return;
+    }
+    case "addTransition": {
+      if (project.transitions.some((transition) => transition.id === operation.transition.id)) {
+        throw new EditPlanError(`Transition "${operation.transition.id}" already exists.`);
+      }
+      if (!project.clips.some((clip) => clip.id === operation.transition.fromClipId)) {
+        throw new EditPlanError(`Transition source clip does not exist.`);
+      }
+      if (!project.clips.some((clip) => clip.id === operation.transition.toClipId)) {
+        throw new EditPlanError(`Transition destination clip does not exist.`);
+      }
+      project.transitions.push(operation.transition);
+      return;
+    }
+    case "updateTransition": {
+      const index = project.transitions.findIndex((transition) => transition.id === operation.transitionId);
+      if (index < 0) throw new EditPlanError(`Transition "${operation.transitionId}" does not exist.`);
+      project.transitions[index] = {
+        ...project.transitions[index],
+        ...(operation.patch ?? {}),
+      };
+      return;
+    }
+    case "removeTransition": {
+      if (!project.transitions.some((transition) => transition.id === operation.transitionId)) {
+        throw new EditPlanError(`Transition "${operation.transitionId}" does not exist.`);
+      }
+      project.transitions = project.transitions.filter((transition) => transition.id !== operation.transitionId);
+      return;
+    }
+    case "duplicateClip": {
+      const clip = getClip(project, operation.clipId);
+      assertTrackWritable(project, clip.trackId);
+      if (project.clips.some((candidate) => candidate.id === operation.duplicateId)) {
+        throw new EditPlanError(`Clip "${operation.duplicateId}" already exists.`);
+      }
+      const duplicate = deepClone(clip);
+      duplicate.id = operation.duplicateId;
+      duplicate.name = `${clip.name} copy`;
+      duplicate.timelineStart = operation.timelineStart ?? clip.timelineStart + clip.duration;
+      project.clips.push(duplicate);
       return;
     }
     case "updateClip": {
@@ -263,6 +318,7 @@ function applyOperation(project: VibeProject, operation: EditOperation): void {
 export interface ApplyEditPlanResult {
   project: VibeProject;
   appliedOperations: number;
+  receipt: MutationReceipt;
 }
 
 export function applyEditPlan(
@@ -299,5 +355,6 @@ export function applyEditPlan(
   return {
     project: projectSchema.parse(next),
     appliedOperations: plan.operations.length,
+    receipt: createMutationReceipt(project, next, plan.operations),
   };
 }

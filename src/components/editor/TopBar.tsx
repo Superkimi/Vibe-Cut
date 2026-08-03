@@ -4,8 +4,10 @@ import {
   ArrowCounterClockwise,
   ArrowClockwise,
   Export,
+  DownloadSimple,
   FilmStrip,
   GearSix,
+  UploadSimple,
 } from "@phosphor-icons/react";
 import { IconButton } from "@/components/ui/IconButton";
 import { useEditorStore } from "@/store/editor-store";
@@ -18,7 +20,41 @@ export function TopBar() {
   const undo = useEditorStore((state) => state.undo);
   const redo = useEditorStore((state) => state.redo);
   const setNotice = useEditorStore((state) => state.setNotice);
+  const exportProjectArchive = useEditorStore((state) => state.exportProjectArchive);
+  const importProjectArchive = useEditorStore((state) => state.importProjectArchive);
   const { locale, setLocale, t } = useI18n();
+
+  const downloadArchive = async () => {
+    try {
+      const blob = await exportProjectArchive();
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = `${project.name.replace(/[^a-zA-Z0-9-_]+/g, "-") || "vibe-cut"}.vibecut`;
+      anchor.click();
+      window.setTimeout(() => URL.revokeObjectURL(url), 10_000);
+      setNotice(t("notice.projectExported"));
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : t("error.projectExport"));
+    }
+  };
+
+  const loadArchive = async (file: File | undefined) => {
+    if (!file) return;
+    try {
+      await importProjectArchive(file);
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : t("error.projectImport"));
+    }
+  };
+
+  const chooseArchive = () => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".vibecut,application/vnd.vibe-cut+json,application/json";
+    input.addEventListener("change", () => void loadArchive(input.files?.[0]), { once: true });
+    input.click();
+  };
 
   return (
     <header className="topbar">
@@ -44,6 +80,16 @@ export function TopBar() {
         />
       </div>
       <div className="topbar-actions">
+        <IconButton
+          icon={UploadSimple}
+          label={t("project.import")}
+          onClick={chooseArchive}
+        />
+        <IconButton
+          icon={DownloadSimple}
+          label={t("project.export")}
+          onClick={() => void downloadArchive()}
+        />
         <IconButton
           icon={GearSix}
           label={t("project.settings")}

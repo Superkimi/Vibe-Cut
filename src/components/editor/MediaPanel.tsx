@@ -38,6 +38,7 @@ export function MediaPanel() {
   const assets = useEditorStore((state) => state.project.assets);
   const assetUrls = useEditorStore((state) => state.assetUrls);
   const importFiles = useEditorStore((state) => state.importFiles);
+  const addAssetToTimeline = useEditorStore((state) => state.addAssetToTimeline);
   const setNotice = useEditorStore((state) => state.setNotice);
   const [importing, setImporting] = useState(false);
   const { t } = useI18n();
@@ -100,7 +101,7 @@ export function MediaPanel() {
                   key={asset.id}
                   title={asset.name}
                   onDoubleClick={() =>
-                      setNotice(t("media.alreadyOnTimeline", { name: asset.name }))
+                    addAssetToTimeline(asset.id)
                   }
                 >
                   <span className="asset-thumb">

@@ -22,12 +22,18 @@ export interface ExportProjectOptions {
   project: VibeProject;
   assetUrls: Record<string, string>;
   onProgress?: (progress: ExportProgress) => void;
+  signal?: AbortSignal;
+}
+
+function throwIfAborted(signal?: AbortSignal): void {
+  if (signal?.aborted) throw new DOMException("Export cancelled.", "AbortError");
 }
 
 async function mixAudio(
   project: VibeProject,
   assetUrls: Record<string, string>,
   onProgress?: (progress: ExportProgress) => void,
+  signal?: AbortSignal,
 ): Promise<AudioBuffer | null> {
   const clips = project.clips.filter(
     (clip): clip is MediaClip =>
@@ -50,6 +56,7 @@ async function mixAudio(
   const decoded = new Map<string, AudioBuffer>();
 
   for (const [index, clip] of clips.entries()) {
+    throwIfAborted(signal);
     const url = assetUrls[clip.assetId];
     if (!url) {
       continue;
@@ -101,10 +108,12 @@ export async function exportProject({
   project,
   assetUrls,
   onProgress,
+  signal,
 }: ExportProjectOptions): Promise<{ blob: Blob; extension: "mp4" | "webm" }> {
   if (project.settings.duration <= 0) {
     throw new Error("Add at least one clip before exporting.");
   }
+  throwIfAborted(signal);
   const width = project.settings.width;
   const height = project.settings.height;
   const fps = project.settings.fps;
@@ -151,7 +160,7 @@ export async function exportProject({
   output.addVideoTrack(videoSource, { frameRate: fps });
 
   const mixedAudio = supportsAudio
-    ? await mixAudio(project, assetUrls, onProgress)
+    ? await mixAudio(project, assetUrls, onProgress, signal)
     : null;
   const audioSource = mixedAudio
     ? new AudioBufferSource({
@@ -171,6 +180,7 @@ export async function exportProject({
     const frameDuration = 1 / fps;
     const frameCount = Math.ceil(project.settings.duration * fps);
     for (let frame = 0; frame < frameCount; frame += 1) {
+      throwIfAborted(signal);
       const time = frame * frameDuration;
       await renderer.render(canvas, time);
       await videoSource.add(time, frameDuration, {

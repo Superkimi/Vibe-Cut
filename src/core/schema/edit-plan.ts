@@ -5,6 +5,7 @@ import {
   mediaClipSchema,
   textClipSchema,
   trackSchema,
+  transitionSchema,
   transformSchema,
 } from "./project";
 
@@ -22,6 +23,12 @@ const clipPatchSchema = z.object({
   fadeIn: z.number().finite().min(0).optional(),
   fadeOut: z.number().finite().min(0).optional(),
   text: z.string().max(2_000).optional(),
+  role: z.enum(["title", "caption", "subtitle"]).optional(),
+  style: textClipSchema.shape.style.partial().optional(),
+  keyframes: textClipSchema.shape.keyframes,
+  effects: textClipSchema.shape.effects,
+  mask: textClipSchema.shape.mask,
+  blendMode: textClipSchema.shape.blendMode,
 });
 
 export const editOperationSchema = z.discriminatedUnion("op", [
@@ -45,6 +52,25 @@ export const editOperationSchema = z.discriminatedUnion("op", [
   z.object({
     op: z.literal("addText"),
     clip: textClipSchema,
+  }),
+  z.object({
+    op: z.literal("addTransition"),
+    transition: transitionSchema,
+  }),
+  z.object({
+    op: z.literal("updateTransition"),
+    transitionId: z.string().min(1),
+    patch: transitionSchema.partial().omit({ id: true }).optional(),
+  }),
+  z.object({
+    op: z.literal("removeTransition"),
+    transitionId: z.string().min(1),
+  }),
+  z.object({
+    op: z.literal("duplicateClip"),
+    clipId: z.string().min(1),
+    duplicateId: z.string().min(1),
+    timelineStart: z.number().finite().min(0).optional(),
   }),
   z.object({
     op: z.literal("updateClip"),

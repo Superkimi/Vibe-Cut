@@ -15,6 +15,8 @@ import {
   type AiProviderConfig,
 } from "@/core/ai/config";
 import { editPlanSchema, type EditPlan } from "@/core/schema/edit-plan";
+import { describePlanDiff } from "@/core/ai/plan-diff";
+import { inspectProject, renderInspectionFrame } from "@/core/editor/inspect-project";
 import { useI18n } from "@/i18n";
 
 interface ChatMessage {
@@ -29,6 +31,7 @@ export function AiPanel() {
   const project = useEditorStore((state) => state.project);
   const currentTime = useEditorStore((state) => state.currentTime);
   const selectedClipIds = useEditorStore((state) => state.selectedClipIds);
+  const assetUrls = useEditorStore((state) => state.assetUrls);
   const pendingPlan = useEditorStore((state) => state.pendingPlan);
   const setPendingPlan = useEditorStore((state) => state.setPendingPlan);
   const applyPlan = useEditorStore((state) => state.applyPlan);
@@ -37,6 +40,7 @@ export function AiPanel() {
   const [loading, setLoading] = useState(false);
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState<string | null>(null);
+  const [inspectionFrame, setInspectionFrame] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: "welcome",
@@ -260,6 +264,7 @@ export function AiPanel() {
         {pendingPlan ? (
           <PlanCard
             plan={pendingPlan}
+            project={project}
             onApply={() => {
               try {
                 applyPlan(pendingPlan);
@@ -267,6 +272,20 @@ export function AiPanel() {
                   "assistant",
                   t("ai.applied", { count: pendingPlan.operations.length }),
                 );
+                const inspection = inspectProject(useEditorStore.getState().project);
+                addMessage(
+                  inspection.ok ? "assistant" : "error",
+                  inspection.ok
+                    ? t("ai.visualCheckPassed", { count: inspection.checkedClips })
+                    : t("ai.visualCheckIssues", { count: inspection.issues.length }),
+                );
+                void renderInspectionFrame(
+                  useEditorStore.getState().project,
+                  assetUrls,
+                  useEditorStore.getState().currentTime,
+                )
+                  .then(setInspectionFrame)
+                  .catch(() => setInspectionFrame(null));
               } catch (error) {
                 addMessage(
                   "error",
@@ -282,6 +301,14 @@ export function AiPanel() {
             <SpinnerGap size={15} className="spin" aria-hidden="true" />{" "}
             {t("ai.readingTimeline")}
           </div>
+        ) : null}
+        {inspectionFrame ? (
+          <figure className="ai-inspection-frame">
+            {/* The frame is rendered from the same local renderer used by export. */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={inspectionFrame} alt={t("ai.visualPreview")} />
+            <figcaption>{t("ai.visualPreview")}</figcaption>
+          </figure>
         ) : null}
       </div>
 
@@ -328,14 +355,17 @@ export function AiPanel() {
 
 function PlanCard({
   plan,
+  project,
   onApply,
   onReject,
 }: {
   plan: EditPlan;
+  project: Parameters<typeof describePlanDiff>[0];
   onApply: () => void;
   onReject: () => void;
 }) {
   const { t } = useI18n();
+  const diff = describePlanDiff(project, plan);
   return (
     <section className="plan-card" aria-label={t("ai.proposedPlan")}>
       <h3>{plan.title}</h3>
@@ -345,6 +375,21 @@ function PlanCard({
           <li key={`${operation.op}-${index}`}>{operation.op}</li>
         ))}
       </ol>
+      <div className="plan-diff" aria-label={t("ai.changeSummary")}>
+        {diff.additions.length ? (
+          <p><strong>{t("ai.additions")}</strong> {diff.additions.join(" · ")}</p>
+        ) : null}
+        {diff.updates.length ? (
+          <p><strong>{t("ai.updates")}</strong> {diff.updates.join(" · ")}</p>
+        ) : null}
+        {diff.removals.length ? (
+          <p><strong>{t("ai.removals")}</strong> {diff.removals.join(" · ")}</p>
+        ) : null}
+        {diff.risks.length ? (
+          <p className="plan-risk"><strong>{t("ai.risks")}</strong> {diff.risks.join(" · ")}</p>
+        ) : null}
+        <p className="plan-visual-check">{t("ai.visualCheck")}</p>
+      </div>
       {plan.warnings.map((warning) => (
         <p key={warning}>{t("ai.warning", { warning })}</p>
       ))}

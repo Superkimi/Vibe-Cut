@@ -24,6 +24,43 @@ export const colorAdjustmentsSchema = z.object({
   blur: nonNegative.max(40).default(0),
 });
 
+export const maskSchema = z.object({
+  type: z.enum(["rect", "ellipse"]).default("rect"),
+  x: finiteNumber.default(0),
+  y: finiteNumber.default(0),
+  width: positive,
+  height: positive,
+  feather: nonNegative.max(200).default(0),
+});
+
+export const keyframeSchema = z.object({
+  time: nonNegative,
+  interpolation: z.enum(["linear", "hold", "smooth"]).default("linear"),
+  properties: z
+    .object({
+      x: finiteNumber.optional(),
+      y: finiteNumber.optional(),
+      width: positive.optional(),
+      height: positive.optional(),
+      rotation: finiteNumber.optional(),
+      scaleX: positive.optional(),
+      scaleY: positive.optional(),
+      opacity: finiteNumber.min(0).max(1).optional(),
+      brightness: finiteNumber.min(-1).max(1).optional(),
+      contrast: finiteNumber.min(-1).max(1).optional(),
+      saturation: finiteNumber.min(-1).max(1).optional(),
+      blur: nonNegative.max(40).optional(),
+    })
+    .refine((value) => Object.keys(value).length > 0, "A keyframe needs a property."),
+});
+
+export const effectSchema = z.object({
+  id: z.string().min(1),
+  type: z.enum(["vignette", "grayscale", "sepia", "sharpen", "drop-shadow"]),
+  enabled: z.boolean().default(true),
+  amount: finiteNumber.min(0).max(1).default(0.5),
+});
+
 export const assetSchema = z.object({
   id: z.string().min(1),
   name: z.string().min(1).max(240),
@@ -66,6 +103,12 @@ const clipBaseSchema = z.object({
     temperature: 0,
     blur: 0,
   }),
+  blendMode: z
+    .enum(["normal", "screen", "multiply", "overlay", "soft-light"])
+    .optional(),
+  mask: maskSchema.optional(),
+  keyframes: z.array(keyframeSchema).max(256).optional(),
+  effects: z.array(effectSchema).max(16).optional(),
 });
 
 export const mediaClipSchema = clipBaseSchema.extend({
@@ -87,7 +130,13 @@ export const textClipSchema = clipBaseSchema.extend({
     color: z.string().regex(/^#[0-9a-fA-F]{6}$/).default("#f7f6fb"),
     backgroundColor: z.string().regex(/^#[0-9a-fA-F]{8}$/).default("#00000000"),
     align: z.enum(["left", "center", "right"]).default("center"),
+    lineHeight: positive.min(1).max(3).optional(),
+    letterSpacing: finiteNumber.min(-20).max(100).optional(),
+    outlineColor: z.string().regex(/^#[0-9a-fA-F]{8}$/).optional(),
+    outlineWidth: nonNegative.max(32).optional(),
+    shadow: z.boolean().optional(),
   }),
+  role: z.enum(["title", "caption", "subtitle"]).optional(),
 });
 
 export const clipSchema = z.discriminatedUnion("type", [
@@ -101,6 +150,7 @@ export const transitionSchema = z.object({
   toClipId: z.string().min(1),
   type: z.enum(["fade", "dissolve", "wipe-left", "wipe-right"]),
   duration: positive.max(5),
+  easing: z.enum(["linear", "smooth"]).optional(),
 });
 
 export const markerSchema = z.object({

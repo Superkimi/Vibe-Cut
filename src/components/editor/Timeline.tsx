@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import {
   ArrowsOutLineHorizontal,
+  Copy,
   Lock,
   Magnet,
   Minus,
@@ -10,11 +11,14 @@ import {
   Scissors,
   SpeakerHigh,
   SpeakerSlash,
+  TextT,
+  Waves,
 } from "@phosphor-icons/react";
 import { IconButton } from "@/components/ui/IconButton";
 import { useEditorStore } from "@/store/editor-store";
 import type { VibeClip } from "@/core/schema/project";
 import { useI18n } from "@/i18n";
+import { snapTimeToFrame } from "@/core/render/resolve-clip";
 
 function secondsLabel(seconds: number): string {
   const minutes = Math.floor(seconds / 60);
@@ -26,7 +30,7 @@ function snapTime(time: number, fps: number, enabled: boolean): number {
   if (!enabled) {
     return Math.max(0, time);
   }
-  return Math.max(0, Math.round(time * fps) / fps);
+  return snapTimeToFrame(time, fps);
 }
 
 function TimelineClip({
@@ -251,6 +255,7 @@ export function Timeline() {
   const toggleRipple = useEditorStore((state) => state.toggleRipple);
   const selectedClipIds = useEditorStore((state) => state.selectedClipIds);
   const commitOperations = useEditorStore((state) => state.commitOperations);
+  const addTextClip = useEditorStore((state) => state.addTextClip);
   const { t } = useI18n();
 
   const contentDuration = Math.max(project.settings.duration, 12);
@@ -286,6 +291,37 @@ export function Timeline() {
     }
   };
 
+  const duplicateSelected = () => {
+    if (selectedClipIds.length !== 1) return;
+    const clip = project.clips.find((candidate) => candidate.id === selectedClipIds[0]);
+    if (!clip) return;
+    commitOperations(t("edit.duplicate"), [
+      { op: "duplicateClip", clipId: clip.id, duplicateId: crypto.randomUUID() },
+    ]);
+  };
+
+  const addTransition = () => {
+    if (selectedClipIds.length !== 2) return;
+    const clips = selectedClipIds
+      .map((id) => project.clips.find((clip) => clip.id === id))
+      .filter((clip): clip is VibeClip => Boolean(clip))
+      .sort((a, b) => a.timelineStart - b.timelineStart);
+    if (clips.length !== 2 || clips[0].trackId !== clips[1].trackId) return;
+    commitOperations(t("edit.transition"), [
+      {
+        op: "addTransition",
+        transition: {
+          id: crypto.randomUUID(),
+          fromClipId: clips[0].id,
+          toClipId: clips[1].id,
+          type: "dissolve",
+          duration: Math.min(0.5, clips[0].duration, clips[1].duration),
+          easing: "smooth",
+        },
+      },
+    ]);
+  };
+
   return (
     <section className="timeline-shell" aria-label={t("timeline.title")}>
       <div className="timeline-toolbar">
@@ -295,6 +331,23 @@ export function Timeline() {
             label={t("timeline.split")}
             disabled={selectedClipIds.length !== 1}
             onClick={splitSelected}
+          />
+          <IconButton
+            icon={TextT}
+            label={t("timeline.addText")}
+            onClick={() => addTextClip()}
+          />
+          <IconButton
+            icon={Copy}
+            label={t("timeline.duplicate")}
+            disabled={selectedClipIds.length !== 1}
+            onClick={duplicateSelected}
+          />
+          <IconButton
+            icon={Waves}
+            label={t("timeline.transition")}
+            disabled={selectedClipIds.length !== 2}
+            onClick={addTransition}
           />
           <button
             type="button"

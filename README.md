@@ -12,14 +12,21 @@ and conversational AI operate on the same versioned timeline.
 - Multi-track timeline with playhead, zoom, snapping, clip selection, moving,
   ripple trimming, splitting, and 100-step undo/redo history.
 - Canvas preview with transforms, fit modes, opacity, picture adjustments, text
-  layers, direct pointer dragging, keyboard nudging, playback, and standard
-  aspect-ratio presets.
+  layers, captions, overlay/PIP media, masks, blend modes, keyframe animation,
+  visual effects, direct pointer dragging, keyboard nudging, playback, and
+  standard aspect-ratio presets.
+- Frame-snapped timeline editing with duplicate clips and dissolve/fade/wipe
+  transitions. Preview and browser export share the same frame renderer,
+  including animation and transition behavior.
 - Synchronized video and audio preview with track visibility and mute semantics.
 - Local MP4 (H.264/AAC) or WebM (VP9/Opus) export through WebCodecs and
   Mediabunny, selected by browser capability.
 - Vibe editing with configurable OpenAI-compatible or Anthropic models.
 - Forced structured tool calls that produce a reviewable, validated,
   revision-bound edit plan before any timeline mutation.
+- AI change summaries show additions, updates, removals, and risks; successful
+  edits produce a mutation receipt and a local composited-frame inspection
+  using the same renderer as export.
 - Atomic application: one invalid operation rejects the entire plan.
 - Cross-reference and source-window validation prevents missing tracks/assets,
   incompatible media tracks, or edits that run past source duration.
@@ -27,6 +34,9 @@ and conversational AI operate on the same versioned timeline.
   and are not written to server storage or logs.
 - English and Chinese editor UI with a persistent language switcher covering
   the timeline, canvas inspector, Vibe chat, model settings, and export flow.
+- Portable `.vibecut` project archives embed the project document and local
+  media, so projects can move between browsers instead of living only in
+  IndexedDB.
 
 ## Quick start
 
@@ -104,10 +114,12 @@ No reference source code or pi-web agent/session runtime is reused.
 
 ## Current scope
 
-The shipped foundation supports deterministic timeline editing and structured
-AI changes. Transcript editing, automatic captions, semantic scene detection,
-background jobs, shared cloud projects, and proxy media are logical next
-milestones rather than implied behavior in this release.
+The shipped foundation supports deterministic timeline editing, overlays,
+captions, transitions, keyframes, portable project archives, and structured AI
+changes. Transcript editing, automatic speech recognition, semantic scene
+detection, cloud collaboration, and proxy media remain next milestones. The
+current product does not claim full server-side headless rendering for every
+visual effect.
 
 ## License
 
