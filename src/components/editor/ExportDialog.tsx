@@ -4,19 +4,24 @@ import { useEffect, useState } from "react";
 import { CheckCircle, DownloadSimple, SpinnerGap, X } from "@phosphor-icons/react";
 import { exportProject, type ExportProgress } from "@/core/export/export-project";
 import { useEditorStore } from "@/store/editor-store";
+import { useI18n } from "@/i18n";
+import type { TranslationKey } from "@/i18n";
 
-function phaseLabel(progress: ExportProgress | null): string {
+function phaseLabel(
+  progress: ExportProgress | null,
+  t: (key: TranslationKey) => string,
+): string {
   switch (progress?.phase) {
     case "prepare":
-      return "Preparing media";
+      return t("export.preparing");
     case "audio":
-      return "Mixing audio";
+      return t("export.mixing");
     case "video":
-      return "Rendering frames";
+      return t("export.rendering");
     case "finalize":
-      return "Finalizing file";
+      return t("export.finalizing");
     default:
-      return "Ready to export";
+      return t("export.ready");
   }
 }
 
@@ -27,6 +32,7 @@ export function ExportDialog() {
   const [progress, setProgress] = useState<ExportProgress | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
+  const { t } = useI18n();
 
   useEffect(() => {
     const show = () => {
@@ -62,7 +68,7 @@ export function ExportDialog() {
       setDone(true);
       setProgress({ phase: "finalize", progress: 1 });
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Export failed.");
+      setError(caught instanceof Error ? caught.message : t("error.exportFailed"));
       setProgress(null);
     }
   };
@@ -78,7 +84,7 @@ export function ExportDialog() {
       >
         <header className="dialog-header">
           <div>
-            <h2 id="export-title">Export video</h2>
+            <h2 id="export-title">{t("export.title")}</h2>
             <p>
               {project.settings.width} x {project.settings.height},{" "}
               {project.settings.fps} fps
@@ -87,7 +93,7 @@ export function ExportDialog() {
           <button
             type="button"
             className="icon-button"
-            aria-label="Close export dialog"
+            aria-label={t("export.closeDialog")}
             disabled={busy}
             onClick={() => setOpen(false)}
           >
@@ -102,11 +108,8 @@ export function ExportDialog() {
           ) : (
             <DownloadSimple size={28} aria-hidden="true" />
           )}
-          <strong>{done ? "Export downloaded" : phaseLabel(progress)}</strong>
-          <p>
-            {error ??
-              "Vibe Cut renders locally with WebCodecs. Your media is not uploaded."}
-          </p>
+          <strong>{done ? t("export.downloaded") : phaseLabel(progress, t)}</strong>
+          <p>{error ?? t("export.localNote")}</p>
           {progress ? (
             <progress
               className="export-progress"
@@ -124,7 +127,7 @@ export function ExportDialog() {
             disabled={busy}
             onClick={() => setOpen(false)}
           >
-            Close
+            {t("action.close")}
           </button>
           <button
             type="button"
@@ -133,7 +136,7 @@ export function ExportDialog() {
             onClick={() => void runExport()}
           >
             <DownloadSimple size={16} aria-hidden="true" />
-            {done ? "Export again" : "Export"}
+            {done ? t("action.exportAgain") : t("action.export")}
           </button>
         </footer>
       </section>

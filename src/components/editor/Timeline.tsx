@@ -14,6 +14,7 @@ import {
 import { IconButton } from "@/components/ui/IconButton";
 import { useEditorStore } from "@/store/editor-store";
 import type { VibeClip } from "@/core/schema/project";
+import { useI18n } from "@/i18n";
 
 function secondsLabel(seconds: number): string {
   const minutes = Math.floor(seconds / 60);
@@ -44,6 +45,7 @@ function TimelineClip({
   const projectClips = useEditorStore((state) => state.project.clips);
   const snapEnabled = useEditorStore((state) => state.snapEnabled);
   const rippleEnabled = useEditorStore((state) => state.rippleEnabled);
+  const { t } = useI18n();
   const [draft, setDraft] = useState<{
     start: number;
     duration: number;
@@ -104,7 +106,7 @@ function TimelineClip({
       setDraft((finalDraft) => {
         if (finalDraft) {
           if (mode === "move") {
-            commitOperations(`Move ${clip.name}`, [
+            commitOperations(t("edit.move", { name: clip.name }), [
               {
                 op: "moveClip",
                 clipId: clip.id,
@@ -132,7 +134,7 @@ function TimelineClip({
                       ),
                     }))
                 : [];
-            commitOperations(`Trim ${clip.name}`, [
+            commitOperations(t("edit.trim", { name: clip.name }), [
               {
                 op: "trimClip",
                 clipId: clip.id,
@@ -171,7 +173,7 @@ function TimelineClip({
                       ),
                     }))
                 : [];
-            commitOperations(`Trim ${clip.name}`, [
+            commitOperations(t("edit.trim", { name: clip.name }), [
               {
                 op: "trimClip",
                 clipId: clip.id,
@@ -209,7 +211,11 @@ function TimelineClip({
       }}
       role="button"
       tabIndex={0}
-      aria-label={`${clip.name}, starts at ${secondsLabel(view.start)}, duration ${view.duration.toFixed(1)} seconds`}
+      aria-label={t("timeline.clipAria", {
+        name: clip.name,
+        start: secondsLabel(view.start),
+        duration: view.duration.toFixed(1),
+      })}
       onPointerDown={(event) => beginDrag(event, "move")}
       onKeyDown={(event) => {
         if (event.key === "Enter") {
@@ -245,6 +251,7 @@ export function Timeline() {
   const toggleRipple = useEditorStore((state) => state.toggleRipple);
   const selectedClipIds = useEditorStore((state) => state.selectedClipIds);
   const commitOperations = useEditorStore((state) => state.commitOperations);
+  const { t } = useI18n();
 
   const contentDuration = Math.max(project.settings.duration, 12);
   const contentWidth = Math.max(900, contentDuration * zoom + 420);
@@ -268,7 +275,7 @@ export function Timeline() {
       currentTime > clip.timelineStart &&
       currentTime < clip.timelineStart + clip.duration
     ) {
-      commitOperations("Split clip", [
+      commitOperations(t("edit.split"), [
         {
           op: "splitClip",
           clipId: clip.id,
@@ -280,12 +287,12 @@ export function Timeline() {
   };
 
   return (
-    <section className="timeline-shell" aria-label="Timeline">
+    <section className="timeline-shell" aria-label={t("timeline.title")}>
       <div className="timeline-toolbar">
         <div className="toolbar-group">
           <IconButton
             icon={Scissors}
-            label="Split selected clip at playhead"
+            label={t("timeline.split")}
             disabled={selectedClipIds.length !== 1}
             onClick={splitSelected}
           />
@@ -296,7 +303,7 @@ export function Timeline() {
             onClick={toggleSnap}
           >
             <Magnet size={16} aria-hidden="true" />
-            Snap
+            {t("timeline.snap")}
           </button>
           <button
             type="button"
@@ -305,13 +312,13 @@ export function Timeline() {
             onClick={toggleRipple}
           >
             <ArrowsOutLineHorizontal size={16} aria-hidden="true" />
-            Ripple
+            {t("timeline.ripple")}
           </button>
         </div>
         <div className="zoom-control">
           <Minus size={12} aria-hidden="true" />
           <label className="sr-only" htmlFor="timeline-zoom">
-            Timeline zoom
+            {t("timeline.zoom")}
           </label>
           <input
             id="timeline-zoom"
@@ -347,9 +354,9 @@ export function Timeline() {
             <div className="track-row" key={track.id}>
               <div className="track-label">
                 {track.locked ? (
-                  <Lock size={13} aria-label="Locked" />
+                    <Lock size={13} aria-label={t("timeline.locked")} />
                 ) : track.muted ? (
-                  <SpeakerSlash size={13} aria-label="Muted" />
+                    <SpeakerSlash size={13} aria-label={t("timeline.muted")} />
                 ) : (
                   <SpeakerHigh size={13} aria-hidden="true" />
                 )}

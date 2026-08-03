@@ -141,6 +141,36 @@ button,
   justify-content: flex-end;
 }
 
+.locale-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  min-height: 30px;
+  padding: 2px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--panel-raised);
+}
+
+.locale-toggle button {
+  min-width: 31px;
+  min-height: 24px;
+  padding: 0 7px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  font: 650 10px/1 "Geist Mono Variable", monospace;
+  transition: background-color 160ms ease, color 160ms ease;
+}
+
+.locale-toggle button:hover,
+.locale-toggle button[data-active="true"] {
+  background: var(--accent-muted);
+  color: var(--accent-strong);
+}
+
 .icon-button,
 .tool-button,
 .primary-button,

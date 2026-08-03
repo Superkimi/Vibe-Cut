@@ -15,19 +15,13 @@ import {
   type AiProviderConfig,
 } from "@/core/ai/config";
 import { editPlanSchema, type EditPlan } from "@/core/schema/edit-plan";
+import { useI18n } from "@/i18n";
 
 interface ChatMessage {
   id: string;
   role: "user" | "assistant" | "error";
   text: string;
 }
-
-const suggestions = [
-  "Add a clean title for the first 3 seconds",
-  "Make this a 9:16 short",
-  "Split the selected clip at the playhead",
-  "Trim the opening to start at 2 seconds",
-];
 
 const appBasePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
@@ -38,6 +32,7 @@ export function AiPanel() {
   const pendingPlan = useEditorStore((state) => state.pendingPlan);
   const setPendingPlan = useEditorStore((state) => state.setPendingPlan);
   const applyPlan = useEditorStore((state) => state.applyPlan);
+  const { t } = useI18n();
   const [prompt, setPrompt] = useState("");
   const [loading, setLoading] = useState(false);
   const [testing, setTesting] = useState(false);
@@ -46,7 +41,7 @@ export function AiPanel() {
     {
       id: "welcome",
       role: "assistant",
-      text: "Describe the cut you want. I will turn it into a reviewable timeline plan before changing anything.",
+      text: t("ai.welcome"),
     },
   ]);
   const [config, setConfig] = useState<AiProviderConfig>({
@@ -66,7 +61,7 @@ export function AiPanel() {
       return;
     }
     if (!config.apiKey.trim()) {
-      addMessage("error", "Add an API key in Model settings first.");
+      addMessage("error", t("ai.addKeyFirst"));
       return;
     }
     setPrompt("");
@@ -88,7 +83,7 @@ export function AiPanel() {
         error?: string;
       };
       if (!response.ok || !payload.plan) {
-        throw new Error(payload.error ?? "Planning failed.");
+        throw new Error(payload.error ?? t("ai.planningFailed"));
       }
       const plan = editPlanSchema.parse(payload.plan);
       setPendingPlan(plan);
@@ -96,7 +91,7 @@ export function AiPanel() {
     } catch (error) {
       addMessage(
         "error",
-        error instanceof Error ? error.message : "Planning failed.",
+        error instanceof Error ? error.message : t("ai.planningFailed"),
       );
     } finally {
       setLoading(false);
@@ -105,7 +100,7 @@ export function AiPanel() {
 
   const testConnection = async () => {
     if (!config.apiKey.trim()) {
-      setTestResult("Enter an API key first.");
+      setTestResult(t("ai.enterKey"));
       return;
     }
     setTesting(true);
@@ -122,12 +117,12 @@ export function AiPanel() {
         error?: string;
       };
       if (!response.ok || !result.ok) {
-        throw new Error(result.error ?? "Connection test failed.");
+        throw new Error(result.error ?? t("ai.connectionFailed"));
       }
-      setTestResult(`Connected in ${result.latencyMs ?? 0} ms`);
+      setTestResult(t("ai.connected", { latency: result.latencyMs ?? 0 }));
     } catch (error) {
       setTestResult(
-        error instanceof Error ? error.message : "Connection test failed.",
+        error instanceof Error ? error.message : t("ai.connectionFailed"),
       );
     } finally {
       setTesting(false);
@@ -140,11 +135,11 @@ export function AiPanel() {
         <summary>
           <CaretDown size={13} aria-hidden="true" />
           <Key size={14} aria-hidden="true" />
-          Model settings
+          {t("ai.modelSettings")}
         </summary>
         <div className="ai-config-fields">
           <div className="field">
-            <label htmlFor="ai-provider">Provider API</label>
+            <label htmlFor="ai-provider">{t("ai.providerApi")}</label>
             <select
               id="ai-provider"
               className="select-input"
@@ -161,12 +156,12 @@ export function AiPanel() {
                 }));
               }}
             >
-              <option value="openai-compatible">OpenAI compatible</option>
-              <option value="anthropic">Anthropic</option>
+              <option value="openai-compatible">{t("ai.openaiCompatible")}</option>
+              <option value="anthropic">{t("ai.anthropic")}</option>
             </select>
           </div>
           <div className="field">
-            <label htmlFor="ai-base-url">Base URL</label>
+            <label htmlFor="ai-base-url">{t("ai.baseUrl")}</label>
             <input
               id="ai-base-url"
               className="text-input"
@@ -182,7 +177,7 @@ export function AiPanel() {
             />
           </div>
           <div className="field">
-            <label htmlFor="ai-model">Model</label>
+            <label htmlFor="ai-model">{t("ai.model")}</label>
             <input
               id="ai-model"
               className="text-input"
@@ -198,7 +193,7 @@ export function AiPanel() {
             />
           </div>
           <div className="field">
-            <label htmlFor="ai-key">API key</label>
+            <label htmlFor="ai-key">{t("ai.apiKey")}</label>
             <input
               id="ai-key"
               className="text-input"
@@ -206,7 +201,7 @@ export function AiPanel() {
               value={config.apiKey}
               autoComplete="off"
               spellCheck={false}
-              placeholder="Stored in this tab only"
+              placeholder={t("ai.keyPlaceholder")}
               onChange={(event) => {
                 const value = event.currentTarget.value;
                 setConfig((current) => ({
@@ -227,7 +222,7 @@ export function AiPanel() {
             ) : (
               <Check size={15} aria-hidden="true" />
             )}
-            Test connection
+            {t("action.testConnection")}
           </button>
           {testResult ? (
             <span className="field-label" role="status">
@@ -240,12 +235,17 @@ export function AiPanel() {
       <div className="ai-messages" aria-live="polite">
         {messages.map((message) => (
           <div className={`message ${message.role}`} key={message.id}>
-            {message.text}
+            {message.id === "welcome" ? t("ai.welcome") : message.text}
           </div>
         ))}
         {!messages.some((message) => message.role === "user") ? (
           <div className="ai-suggestions">
-            {suggestions.map((suggestion) => (
+            {[
+              t("ai.suggestionTitle"),
+              t("ai.suggestionShort"),
+              t("ai.suggestionSplit"),
+              t("ai.suggestionTrim"),
+            ].map((suggestion) => (
               <button
                 type="button"
                 className="suggestion"
@@ -265,12 +265,12 @@ export function AiPanel() {
                 applyPlan(pendingPlan);
                 addMessage(
                   "assistant",
-                  `Applied ${pendingPlan.operations.length} timeline changes. You can undo them as one step.`,
+                  t("ai.applied", { count: pendingPlan.operations.length }),
                 );
               } catch (error) {
                 addMessage(
                   "error",
-                  error instanceof Error ? error.message : "Could not apply plan.",
+                  error instanceof Error ? error.message : t("ai.planningFailed"),
                 );
               }
             }}
@@ -280,7 +280,7 @@ export function AiPanel() {
         {loading ? (
           <div className="message assistant">
             <SpinnerGap size={15} className="spin" aria-hidden="true" />{" "}
-            Reading the timeline and building a plan
+            {t("ai.readingTimeline")}
           </div>
         ) : null}
       </div>
@@ -288,13 +288,13 @@ export function AiPanel() {
       <div className="ai-composer">
         <div className="composer-wrap">
           <label className="sr-only" htmlFor="vibe-prompt">
-            Describe a video edit
+            {t("ai.promptLabel")}
           </label>
           <textarea
             id="vibe-prompt"
             className="text-area"
             value={prompt}
-            placeholder="Cut the first 2 seconds, then add a centered title..."
+            placeholder={t("ai.promptPlaceholder")}
             onChange={(event) => {
               const value = event.currentTarget.value;
               setPrompt(value);
@@ -309,8 +309,8 @@ export function AiPanel() {
           <button
             type="button"
             className="icon-button composer-send"
-            aria-label="Create edit plan"
-            title="Create edit plan"
+            aria-label={t("action.createPlan")}
+            title={t("action.createPlan")}
             disabled={!prompt.trim() || loading}
             onClick={() => void requestPlan()}
           >
@@ -318,8 +318,8 @@ export function AiPanel() {
           </button>
         </div>
         <div className="composer-hint">
-          <span>Enter to plan, Shift+Enter for a new line</span>
-          <span>Review before apply</span>
+          <span>{t("ai.enterHint")}</span>
+          <span>{t("ai.reviewHint")}</span>
         </div>
       </div>
     </div>
@@ -335,8 +335,9 @@ function PlanCard({
   onApply: () => void;
   onReject: () => void;
 }) {
+  const { t } = useI18n();
   return (
-    <section className="plan-card" aria-label="Proposed edit plan">
+    <section className="plan-card" aria-label={t("ai.proposedPlan")}>
       <h3>{plan.title}</h3>
       <p>{plan.explanation}</p>
       <ol className="plan-operations">
@@ -345,16 +346,16 @@ function PlanCard({
         ))}
       </ol>
       {plan.warnings.map((warning) => (
-        <p key={warning}>Warning: {warning}</p>
+        <p key={warning}>{t("ai.warning", { warning })}</p>
       ))}
       <div className="plan-actions">
         <button type="button" className="primary-button" onClick={onApply}>
           <Check size={15} aria-hidden="true" />
-          Apply
+          {t("action.apply")}
         </button>
         <button type="button" className="secondary-button" onClick={onReject}>
           <X size={15} aria-hidden="true" />
-          Dismiss
+          {t("action.dismiss")}
         </button>
       </div>
     </section>

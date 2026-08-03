@@ -5,6 +5,7 @@ import { Pause, Play, SkipBack } from "@phosphor-icons/react";
 import { IconButton } from "@/components/ui/IconButton";
 import { useEditorStore } from "@/store/editor-store";
 import type { MediaClip, TextClip, VibeClip } from "@/core/schema/project";
+import { useI18n } from "@/i18n";
 
 function formatTimecode(seconds: number, fps: number): string {
   const safe = Math.max(0, seconds);
@@ -24,6 +25,7 @@ function useLayerDrag(
   onSelect: () => void,
 ) {
   const commitOperations = useEditorStore((state) => state.commitOperations);
+  const { t } = useI18n();
   const [draft, setDraft] = useState<{ x: number; y: number } | null>(null);
   const draftRef = useRef<{ x: number; y: number } | null>(null);
 
@@ -31,7 +33,7 @@ function useLayerDrag(
     if (x === clip.transform.x && y === clip.transform.y) {
       return;
     }
-    commitOperations(`Move ${clip.name}`, [
+    commitOperations(t("edit.move", { name: clip.name }), [
       {
         op: "updateClip",
         clipId: clip.id,
@@ -133,6 +135,7 @@ function MediaLayer({
   muted: boolean;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const { t } = useI18n();
   const asset = useEditorStore((state) =>
     state.project.assets.find((candidate) => candidate.id === clip.assetId),
   );
@@ -179,7 +182,7 @@ function MediaLayer({
       type="button"
       className="preview-layer"
       style={style}
-      aria-label={`Select ${clip.name}`}
+      aria-label={t("preview.select", { name: clip.name })}
       onClick={onSelect}
       onPointerDown={drag.onPointerDown}
       onKeyDown={drag.onKeyDown}
@@ -210,6 +213,7 @@ function AudioPlayback({
   url?: string;
 }) {
   const audioRef = useRef<HTMLAudioElement>(null);
+  const { t } = useI18n();
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -237,7 +241,7 @@ function AudioPlayback({
       src={url}
       muted={muted}
       preload="auto"
-      aria-label={`Audio preview for ${clip.name}`}
+      aria-label={t("preview.audio", { name: clip.name })}
     />
   ) : null;
 }
@@ -255,6 +259,7 @@ function TextLayer({
   projectWidth: number;
   projectHeight: number;
 }) {
+  const { t } = useI18n();
   const drag = useLayerDrag(
     clip,
     projectWidth,
@@ -266,7 +271,7 @@ function TextLayer({
     <button
       type="button"
       className="preview-layer preview-text"
-      aria-label={`Select ${clip.name}`}
+      aria-label={t("preview.select", { name: clip.name })}
       onClick={onSelect}
       style={{
         left: `${(drag.x / projectWidth) * 100}%`,
@@ -300,6 +305,7 @@ export function PreviewStage() {
   const setPlaying = useEditorStore((state) => state.setPlaying);
   const setCurrentTime = useEditorStore((state) => state.setCurrentTime);
   const selectClip = useEditorStore((state) => state.selectClip);
+  const { t } = useI18n();
 
   const activeClips = useMemo(
     () =>
@@ -330,11 +336,11 @@ export function PreviewStage() {
   } as React.CSSProperties;
 
   return (
-    <section className="stage-column" aria-label="Preview">
+    <section className="stage-column" aria-label={t("preview.title")}>
       <div className="preview-wrap">
         <div className="preview-canvas" style={canvasStyle}>
           {!activeClips.length ? (
-            <div className="preview-empty">Move the playhead onto a clip</div>
+            <div className="preview-empty">{t("preview.empty")}</div>
           ) : null}
           {activeClips.map((clip: VibeClip) =>
             clip.type === "media" ? (
@@ -384,12 +390,12 @@ export function PreviewStage() {
       <div className="transport">
         <IconButton
           icon={SkipBack}
-          label="Go to start"
+          label={t("preview.goToStart")}
           onClick={() => setCurrentTime(0)}
         />
         <IconButton
           icon={playing ? Pause : Play}
-          label={playing ? "Pause" : "Play"}
+          label={playing ? t("preview.pause") : t("preview.play")}
           onClick={() => setPlaying(!playing)}
         />
         <span className="timecode">

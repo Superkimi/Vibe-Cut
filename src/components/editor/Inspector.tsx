@@ -4,6 +4,7 @@ import { useId } from "react";
 import { useEditorStore } from "@/store/editor-store";
 import type { EditOperation } from "@/core/schema/edit-plan";
 import type { VibeClip } from "@/core/schema/project";
+import { useI18n } from "@/i18n";
 
 function NumericField({
   label,
@@ -41,18 +42,19 @@ function NumericField({
 
 function ClipInspector({ clip }: { clip: VibeClip }) {
   const commitOperations = useEditorStore((state) => state.commitOperations);
+  const { t } = useI18n();
   const patch = (next: Extract<EditOperation, { op: "updateClip" }>["patch"]) =>
-    commitOperations(`Update ${clip.name}`, [
+    commitOperations(t("edit.update", { name: clip.name }), [
       { op: "updateClip", clipId: clip.id, patch: next },
     ]);
 
   return (
     <div className="inspector">
       <section className="inspector-section">
-        <h2 className="section-heading">Clip</h2>
+        <h2 className="section-heading">{t("inspector.clip")}</h2>
         <div className="field-grid">
           <div className="field full">
-            <label htmlFor="clip-name">Name</label>
+            <label htmlFor="clip-name">{t("inspector.name")}</label>
             <input
               id="clip-name"
               className="text-input"
@@ -67,22 +69,22 @@ function ClipInspector({ clip }: { clip: VibeClip }) {
             />
           </div>
           <NumericField
-            label="Start"
+            label={t("inspector.start")}
             value={clip.timelineStart}
             onCommit={(timelineStart) => patch({ timelineStart })}
           />
           <NumericField
-            label="Duration"
+            label={t("inspector.duration")}
             value={clip.duration}
             onCommit={(duration) => patch({ duration: Math.max(0.05, duration) })}
           />
           <NumericField
-            label="Speed"
+            label={t("inspector.speed")}
             value={clip.speed}
             onCommit={(speed) => patch({ speed: Math.max(0.1, speed) })}
           />
           <NumericField
-            label="Opacity"
+            label={t("inspector.opacity")}
             value={clip.opacity}
             step="0.01"
             onCommit={(opacity) =>
@@ -92,22 +94,22 @@ function ClipInspector({ clip }: { clip: VibeClip }) {
         </div>
       </section>
       <section className="inspector-section">
-        <h2 className="section-heading">Transform</h2>
+        <h2 className="section-heading">{t("inspector.transform")}</h2>
         <div className="field-grid">
           <NumericField
-            label="X"
+            label={t("inspector.x")}
             value={clip.transform.x}
             step="1"
             onCommit={(x) => patch({ transform: { x } })}
           />
           <NumericField
-            label="Y"
+            label={t("inspector.y")}
             value={clip.transform.y}
             step="1"
             onCommit={(y) => patch({ transform: { y } })}
           />
           <NumericField
-            label="Width"
+            label={t("inspector.width")}
             value={clip.transform.width}
             step="1"
             onCommit={(width) =>
@@ -115,7 +117,7 @@ function ClipInspector({ clip }: { clip: VibeClip }) {
             }
           />
           <NumericField
-            label="Height"
+            label={t("inspector.height")}
             value={clip.transform.height}
             step="1"
             onCommit={(height) =>
@@ -123,7 +125,7 @@ function ClipInspector({ clip }: { clip: VibeClip }) {
             }
           />
           <NumericField
-            label="Rotation"
+            label={t("inspector.rotation")}
             value={clip.transform.rotation}
             step="1"
             onCommit={(rotation) => patch({ transform: { rotation } })}
@@ -132,9 +134,9 @@ function ClipInspector({ clip }: { clip: VibeClip }) {
       </section>
       {clip.type === "text" ? (
         <section className="inspector-section">
-          <h2 className="section-heading">Text</h2>
+          <h2 className="section-heading">{t("inspector.text")}</h2>
           <div className="field">
-            <label htmlFor="clip-text">Content</label>
+            <label htmlFor="clip-text">{t("inspector.content")}</label>
             <textarea
               id="clip-text"
               className="text-area"
@@ -150,9 +152,9 @@ function ClipInspector({ clip }: { clip: VibeClip }) {
         </section>
       ) : (
         <section className="inspector-section">
-          <h2 className="section-heading">Picture</h2>
+          <h2 className="section-heading">{t("inspector.picture")}</h2>
           <div className="field">
-            <label htmlFor="brightness">Brightness</label>
+            <label htmlFor="brightness">{t("inspector.brightness")}</label>
             <input
               id="brightness"
               className="range-input"
@@ -169,7 +171,7 @@ function ClipInspector({ clip }: { clip: VibeClip }) {
             />
           </div>
           <div className="field">
-            <label htmlFor="saturation">Saturation</label>
+            <label htmlFor="saturation">{t("inspector.saturation")}</label>
             <input
               id="saturation"
               className="range-input"
@@ -194,28 +196,29 @@ function ClipInspector({ clip }: { clip: VibeClip }) {
 function CanvasInspector() {
   const project = useEditorStore((state) => state.project);
   const commitOperations = useEditorStore((state) => state.commitOperations);
+  const { t } = useI18n();
   const setCanvas = (patch: Omit<Extract<EditOperation, { op: "setCanvas" }>, "op">) =>
-    commitOperations("Update canvas", [{ op: "setCanvas", ...patch }]);
+    commitOperations(t("edit.canvas"), [{ op: "setCanvas", ...patch }]);
 
   return (
     <div className="inspector">
       <section className="inspector-section">
-        <h2 className="section-heading">Canvas</h2>
+        <h2 className="section-heading">{t("inspector.canvas")}</h2>
         <div className="field-grid">
           <NumericField
-            label="Width"
+            label={t("inspector.width")}
             value={project.settings.width}
             step="1"
             onCommit={(width) => setCanvas({ width: Math.round(width) })}
           />
           <NumericField
-            label="Height"
+            label={t("inspector.height")}
             value={project.settings.height}
             step="1"
             onCommit={(height) => setCanvas({ height: Math.round(height) })}
           />
           <div className="field">
-            <label htmlFor="canvas-fps">Frame rate</label>
+            <label htmlFor="canvas-fps">{t("inspector.frameRate")}</label>
             <select
               id="canvas-fps"
               className="select-input"
@@ -234,7 +237,7 @@ function CanvasInspector() {
             </select>
           </div>
           <div className="field">
-            <label htmlFor="canvas-background">Background</label>
+            <label htmlFor="canvas-background">{t("inspector.background")}</label>
             <input
               id="canvas-background"
               className="text-input"
@@ -248,13 +251,13 @@ function CanvasInspector() {
         </div>
       </section>
       <section className="inspector-section">
-        <h2 className="section-heading">Presets</h2>
+        <h2 className="section-heading">{t("inspector.presets")}</h2>
         <div className="ai-suggestions">
           {[
-            ["YouTube 16:9", 1920, 1080],
-            ["Shorts 9:16", 1080, 1920],
-            ["Square 1:1", 1080, 1080],
-            ["Portrait 4:5", 1080, 1350],
+            [t("inspector.youtube"), 1920, 1080],
+            [t("inspector.shorts"), 1080, 1920],
+            [t("inspector.square"), 1080, 1080],
+            [t("inspector.portrait"), 1080, 1350],
           ].map(([label, width, height]) => (
             <button
               type="button"

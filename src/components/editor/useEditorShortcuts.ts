@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useEditorStore } from "@/store/editor-store";
+import { translate } from "@/i18n";
 
 function isEditableTarget(target: EventTarget | null): boolean {
   return (
@@ -38,7 +39,7 @@ export function useEditorShortcuts() {
         if (store.selectedClipIds.length) {
           event.preventDefault();
           store.commitOperations(
-            "Delete clips",
+            translate("edit.delete"),
             store.selectedClipIds.map((clipId) => ({
               op: "removeClip" as const,
               clipId,
@@ -58,7 +59,7 @@ export function useEditorShortcuts() {
           store.currentTime < clip.timelineStart + clip.duration
         ) {
           event.preventDefault();
-          store.commitOperations("Split clip", [
+          store.commitOperations(translate("edit.split"), [
             {
               op: "splitClip",
               clipId: clip.id,

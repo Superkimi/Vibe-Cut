@@ -42,6 +42,25 @@ test("opens the full editor workspace and imports local media", async ({
   await expect(page.getByText("image 0:05", { exact: true })).toBeVisible();
 });
 
+test("switches the editor between English and Chinese and persists the choice", async ({
+  page,
+}) => {
+  await page.getByRole("button", { name: "中文", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "素材" })).toBeVisible();
+  await expect(page.getByRole("region", { name: "时间线" })).toBeVisible();
+  await expect(page.getByRole("tab", { name: "检查器" })).toBeVisible();
+  await expect(page.getByPlaceholder("裁掉前 2 秒，然后加一条居中的标题……")).toBeVisible();
+  await expect(page.locator("html")).toHaveAttribute("lang", "zh");
+
+  await page.reload();
+  await expect(page.getByRole("heading", { name: "素材" })).toBeVisible();
+
+  await page.getByRole("button", { name: "English", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Media" })).toBeVisible();
+  await expect(page.getByRole("region", { name: "Timeline" })).toBeVisible();
+  await expect(page.locator("html")).toHaveAttribute("lang", "en");
+});
+
 test("creates, reviews, and atomically applies an AI edit plan", async ({
   page,
 }) => {

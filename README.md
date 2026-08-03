@@ -25,6 +25,8 @@ and conversational AI operate on the same versioned timeline.
   incompatible media tracks, or edits that run past source duration.
 - Browser-local API keys. Keys are sent only for the selected provider request
   and are not written to server storage or logs.
+- English and Chinese editor UI with a persistent language switcher covering
+  the timeline, canvas inspector, Vibe chat, model settings, and export flow.
 
 ## Quick start
 
@@ -35,8 +37,9 @@ npm install
 npm run dev
 ```
 
-Open `http://localhost:3000`, import media, then expand **Model settings** in the
-Vibe panel to choose a provider, base URL, model, and API key.
+Open `http://localhost:3000`, use the language switcher in the top bar if
+needed, import media, then expand **Model settings** in the Vibe panel to
+choose a provider, base URL, model, and API key.
 
 Custom OpenAI-compatible origins must be explicitly enabled:
 

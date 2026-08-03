@@ -1,0 +1,338 @@
+"use client";
+
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useSyncExternalStore,
+} from "react";
+
+export type Locale = "en" | "zh";
+
+const STORAGE_KEY = "vibe-cut-locale";
+
+const messages = {
+  en: {
+    "app.loading": "Loading Vibe Cut",
+    "app.workspace": "Video editor workspace",
+    "brand.vibeCut": "Vibe Cut",
+    "language.english": "English",
+    "language.chinese": "中文",
+    "language.toggle": "Language",
+    "history.controls": "History controls",
+    "history.undo": "Undo",
+    "history.redo": "Redo",
+    "project.settings": "Project settings",
+    "project.settingsNotice": "Project settings are available in Inspector",
+    "action.export": "Export",
+    "action.close": "Close",
+    "action.apply": "Apply",
+    "action.dismiss": "Dismiss",
+    "action.importMedia": "Import media",
+    "action.createPlan": "Create edit plan",
+    "action.testConnection": "Test connection",
+    "action.exportAgain": "Export again",
+    "media.library": "Media library",
+    "media.title": "Media",
+    "media.firstShot": "Bring in your first shot",
+    "media.localCopy": "Video, audio, and images stay in your browser.",
+    "media.alreadyOnTimeline": "{name} is already on the timeline",
+    "media.importFailed": "Import failed",
+    "media.video": "video",
+    "media.audio": "audio",
+    "media.image": "image",
+    "panel.editingControls": "Editing controls",
+    "panel.vibe": "Vibe",
+    "panel.inspector": "Inspector",
+    "preview.title": "Preview",
+    "preview.empty": "Move the playhead onto a clip",
+    "preview.goToStart": "Go to start",
+    "preview.play": "Play",
+    "preview.pause": "Pause",
+    "preview.select": "Select {name}",
+    "preview.audio": "Audio preview for {name}",
+    "timeline.title": "Timeline",
+    "timeline.split": "Split selected clip at playhead",
+    "timeline.snap": "Snap",
+    "timeline.ripple": "Ripple",
+    "timeline.zoom": "Timeline zoom",
+    "timeline.locked": "Locked",
+    "timeline.muted": "Muted",
+    "timeline.clipAria": "{name}, starts at {start}, duration {duration} seconds",
+    "inspector.clip": "Clip",
+    "inspector.name": "Name",
+    "inspector.start": "Start",
+    "inspector.duration": "Duration",
+    "inspector.speed": "Speed",
+    "inspector.opacity": "Opacity",
+    "inspector.transform": "Transform",
+    "inspector.x": "X",
+    "inspector.y": "Y",
+    "inspector.width": "Width",
+    "inspector.height": "Height",
+    "inspector.rotation": "Rotation",
+    "inspector.text": "Text",
+    "inspector.content": "Content",
+    "inspector.picture": "Picture",
+    "inspector.brightness": "Brightness",
+    "inspector.saturation": "Saturation",
+    "inspector.canvas": "Canvas",
+    "inspector.frameRate": "Frame rate",
+    "inspector.background": "Background",
+    "inspector.presets": "Presets",
+    "inspector.youtube": "YouTube 16:9",
+    "inspector.shorts": "Shorts 9:16",
+    "inspector.square": "Square 1:1",
+    "inspector.portrait": "Portrait 4:5",
+    "ai.modelSettings": "Model settings",
+    "ai.providerApi": "Provider API",
+    "ai.openaiCompatible": "OpenAI compatible",
+    "ai.anthropic": "Anthropic",
+    "ai.baseUrl": "Base URL",
+    "ai.model": "Model",
+    "ai.apiKey": "API key",
+    "ai.keyPlaceholder": "Stored in this tab only",
+    "ai.welcome": "Describe the cut you want. I will turn it into a reviewable timeline plan before changing anything.",
+    "ai.suggestionTitle": "Add a clean title for the first 3 seconds",
+    "ai.suggestionShort": "Make this a 9:16 short",
+    "ai.suggestionSplit": "Split the selected clip at the playhead",
+    "ai.suggestionTrim": "Trim the opening to start at 2 seconds",
+    "ai.promptLabel": "Describe a video edit",
+    "ai.promptPlaceholder": "Cut the first 2 seconds, then add a centered title...",
+    "ai.enterHint": "Enter to plan, Shift+Enter for a new line",
+    "ai.reviewHint": "Review before apply",
+    "ai.readingTimeline": "Reading the timeline and building a plan",
+    "ai.proposedPlan": "Proposed edit plan",
+    "ai.warning": "Warning: {warning}",
+    "ai.applied": "Applied {count} timeline changes. You can undo them as one step.",
+    "ai.addKeyFirst": "Add an API key in Model settings first.",
+    "ai.enterKey": "Enter an API key first.",
+    "ai.planningFailed": "Planning failed.",
+    "ai.connectionFailed": "Connection test failed.",
+    "ai.connected": "Connected in {latency} ms",
+    "export.title": "Export video",
+    "export.ready": "Ready to export",
+    "export.preparing": "Preparing media",
+    "export.mixing": "Mixing audio",
+    "export.rendering": "Rendering frames",
+    "export.finalizing": "Finalizing file",
+    "export.downloaded": "Export downloaded",
+    "export.localNote": "Vibe Cut renders locally with WebCodecs. Your media is not uploaded.",
+    "export.closeDialog": "Close export dialog",
+    "error.decode": "The browser could not decode this media file.",
+    "error.duration": "Media duration is not finite.",
+    "error.fileType": "Choose a video, audio, or image file.",
+    "error.readFile": "Could not read {name}.",
+    "error.storeFile": "Could not store {name} in this browser.",
+    "error.exportFailed": "Export failed.",
+    "notice.applied": "{label} applied",
+    "notice.undid": "Undid {label}",
+    "notice.redid": "Redid {label}",
+    "edit.import": "Import {name}",
+    "edit.move": "Move {name}",
+    "edit.trim": "Trim {name}",
+    "edit.update": "Update {name}",
+    "edit.split": "Split clip",
+    "edit.delete": "Delete clips",
+    "edit.canvas": "Update canvas",
+  },
+  zh: {
+    "app.loading": "正在加载 Vibe Cut",
+    "app.workspace": "视频剪辑工作区",
+    "brand.vibeCut": "Vibe Cut",
+    "language.english": "English",
+    "language.chinese": "中文",
+    "language.toggle": "语言",
+    "history.controls": "历史记录控制",
+    "history.undo": "撤销",
+    "history.redo": "重做",
+    "project.settings": "项目设置",
+    "project.settingsNotice": "项目设置位于检查器中",
+    "action.export": "导出",
+    "action.close": "关闭",
+    "action.apply": "应用",
+    "action.dismiss": "忽略",
+    "action.importMedia": "导入素材",
+    "action.createPlan": "生成剪辑方案",
+    "action.testConnection": "测试连接",
+    "action.exportAgain": "再次导出",
+    "media.library": "素材库",
+    "media.title": "素材",
+    "media.firstShot": "先导入一段素材",
+    "media.localCopy": "视频、音频和图片都会留在浏览器中。",
+    "media.alreadyOnTimeline": "{name} 已经在时间线上",
+    "media.importFailed": "导入失败",
+    "media.video": "视频",
+    "media.audio": "音频",
+    "media.image": "图片",
+    "panel.editingControls": "剪辑控制",
+    "panel.vibe": "Vibe",
+    "panel.inspector": "检查器",
+    "preview.title": "预览",
+    "preview.empty": "将播放头移到某个片段上",
+    "preview.goToStart": "回到开头",
+    "preview.play": "播放",
+    "preview.pause": "暂停",
+    "preview.select": "选择 {name}",
+    "preview.audio": "预览音频 {name}",
+    "timeline.title": "时间线",
+    "timeline.split": "在播放头处分割选中的片段",
+    "timeline.snap": "吸附",
+    "timeline.ripple": "波纹",
+    "timeline.zoom": "时间线缩放",
+    "timeline.locked": "已锁定",
+    "timeline.muted": "已静音",
+    "timeline.clipAria": "{name}，开始于 {start}，时长 {duration} 秒",
+    "inspector.clip": "片段",
+    "inspector.name": "名称",
+    "inspector.start": "开始",
+    "inspector.duration": "时长",
+    "inspector.speed": "速度",
+    "inspector.opacity": "不透明度",
+    "inspector.transform": "变换",
+    "inspector.x": "X",
+    "inspector.y": "Y",
+    "inspector.width": "宽度",
+    "inspector.height": "高度",
+    "inspector.rotation": "旋转",
+    "inspector.text": "文字",
+    "inspector.content": "内容",
+    "inspector.picture": "画面",
+    "inspector.brightness": "亮度",
+    "inspector.saturation": "饱和度",
+    "inspector.canvas": "画布",
+    "inspector.frameRate": "帧率",
+    "inspector.background": "背景",
+    "inspector.presets": "预设",
+    "inspector.youtube": "YouTube 16:9",
+    "inspector.shorts": "短视频 9:16",
+    "inspector.square": "方形 1:1",
+    "inspector.portrait": "竖屏 4:5",
+    "ai.modelSettings": "模型设置",
+    "ai.providerApi": "服务商 API",
+    "ai.openaiCompatible": "OpenAI 兼容",
+    "ai.anthropic": "Anthropic",
+    "ai.baseUrl": "接口地址",
+    "ai.model": "模型",
+    "ai.apiKey": "API Key",
+    "ai.keyPlaceholder": "仅保存在当前标签页",
+    "ai.welcome": "描述你想要的剪辑。我会先把它整理成可审阅的时间线方案，再执行修改。",
+    "ai.suggestionTitle": "前 3 秒加一条干净的标题",
+    "ai.suggestionShort": "把视频改成 9:16 短视频",
+    "ai.suggestionSplit": "在播放头处分割选中的片段",
+    "ai.suggestionTrim": "把开场裁到从第 2 秒开始",
+    "ai.promptLabel": "描述一个剪辑操作",
+    "ai.promptPlaceholder": "裁掉前 2 秒，然后加一条居中的标题……",
+    "ai.enterHint": "Enter 生成方案，Shift+Enter 换行",
+    "ai.reviewHint": "应用前先审阅",
+    "ai.readingTimeline": "正在读取时间线并生成方案",
+    "ai.proposedPlan": "待应用的剪辑方案",
+    "ai.warning": "提醒：{warning}",
+    "ai.applied": "已应用 {count} 项时间线修改，可作为一步撤销。",
+    "ai.addKeyFirst": "请先在模型设置中填写 API Key。",
+    "ai.enterKey": "请先填写 API Key。",
+    "ai.planningFailed": "生成方案失败。",
+    "ai.connectionFailed": "连接测试失败。",
+    "ai.connected": "已连接，用时 {latency} 毫秒",
+    "export.title": "导出视频",
+    "export.ready": "准备导出",
+    "export.preparing": "准备素材",
+    "export.mixing": "混合音频",
+    "export.rendering": "渲染画面",
+    "export.finalizing": "整理文件",
+    "export.downloaded": "导出已下载",
+    "export.localNote": "Vibe Cut 使用 WebCodecs 在本地渲染，素材不会上传。",
+    "export.closeDialog": "关闭导出窗口",
+    "error.decode": "浏览器无法解码这份素材。",
+    "error.duration": "素材时长无效。",
+    "error.fileType": "请选择视频、音频或图片文件。",
+    "error.readFile": "无法读取 {name}。",
+    "error.storeFile": "无法将 {name} 保存到当前浏览器。",
+    "error.exportFailed": "导出失败。",
+    "notice.applied": "已应用：{label}",
+    "notice.undid": "已撤销：{label}",
+    "notice.redid": "已重做：{label}",
+    "edit.import": "导入 {name}",
+    "edit.move": "移动 {name}",
+    "edit.trim": "裁切 {name}",
+    "edit.update": "更新 {name}",
+    "edit.split": "分割片段",
+    "edit.delete": "删除片段",
+    "edit.canvas": "更新画布",
+  },
+} as const;
+
+export type TranslationKey = keyof typeof messages.en;
+
+function interpolate(template: string, variables?: Record<string, string | number>): string {
+  if (!variables) {
+    return template;
+  }
+  return template.replace(/\{(\w+)\}/g, (_, key: string) =>
+    variables[key] === undefined ? `{${key}}` : String(variables[key]),
+  );
+}
+
+export function readLocale(): Locale {
+  if (typeof window === "undefined") {
+    return "en";
+  }
+  return window.localStorage.getItem(STORAGE_KEY) === "zh" ? "zh" : "en";
+}
+
+export function translate(
+  key: TranslationKey,
+  variables?: Record<string, string | number>,
+  locale: Locale = readLocale(),
+): string {
+  const template = messages[locale][key] ?? messages.en[key] ?? key;
+  return interpolate(template, variables);
+}
+
+interface I18nContextValue {
+  locale: Locale;
+  setLocale: (locale: Locale) => void;
+  t: (key: TranslationKey, variables?: Record<string, string | number>) => string;
+}
+
+const I18nContext = createContext<I18nContextValue | null>(null);
+
+export function I18nProvider({ children }: { children: React.ReactNode }) {
+  const subscribe = useCallback((onStoreChange: () => void) => {
+    const onLocaleChange = () => onStoreChange();
+    window.addEventListener("vibecut:locale-change", onLocaleChange);
+    window.addEventListener("storage", onLocaleChange);
+    return () => {
+      window.removeEventListener("vibecut:locale-change", onLocaleChange);
+      window.removeEventListener("storage", onLocaleChange);
+    };
+  }, []);
+  const locale = useSyncExternalStore(subscribe, readLocale, () => "en" as Locale);
+
+  const setLocale = useCallback((next: Locale) => {
+    window.localStorage.setItem(STORAGE_KEY, next);
+    document.documentElement.lang = next;
+    window.dispatchEvent(new CustomEvent("vibecut:locale-change", { detail: next }));
+  }, []);
+
+  useEffect(() => {
+    document.documentElement.lang = locale;
+  }, [locale]);
+
+  const value = useMemo(
+    () => ({ locale, setLocale, t: (key: TranslationKey, variables?: Record<string, string | number>) => translate(key, variables, locale) }),
+    [locale, setLocale],
+  );
+
+  return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
+}
+
+export function useI18n(): I18nContextValue {
+  const context = useContext(I18nContext);
+  if (!context) {
+    throw new Error("useI18n must be used inside I18nProvider");
+  }
+  return context;
+}

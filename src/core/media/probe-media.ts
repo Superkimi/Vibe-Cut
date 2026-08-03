@@ -1,4 +1,5 @@
 import type { VibeAsset } from "@/core/schema/project";
+import { translate } from "@/i18n";
 
 function waitForEvent(
   target: EventTarget,
@@ -12,7 +13,7 @@ function waitForEvent(
     };
     const onFailure = () => {
       cleanup();
-      reject(new Error("The browser could not decode this media file."));
+      reject(new Error(translate("error.decode")));
     };
     const cleanup = () => {
       target.removeEventListener(success, onSuccess);
@@ -49,7 +50,7 @@ async function mediaMetadata(
     media.src = url;
     await metadataLoaded;
     if (!Number.isFinite(media.duration)) {
-      throw new Error("Media duration is not finite.");
+      throw new Error(translate("error.duration"));
     }
     return {
       duration: media.duration,
@@ -108,7 +109,7 @@ export async function probeMediaFile(
         ? "image"
         : null;
   if (!kind) {
-    throw new Error("Choose a video, audio, or image file.");
+    throw new Error(translate("error.fileType"));
   }
 
   if (kind === "image") {

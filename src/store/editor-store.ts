@@ -12,6 +12,7 @@ import {
 import { getAssetUrl, registerAssetFile } from "@/core/media/asset-registry";
 import { probeMediaFile } from "@/core/media/probe-media";
 import { loadLatestProject, saveProject } from "@/core/storage/project-db";
+import { translate } from "@/i18n";
 
 interface HistoryEntry {
   label: string;
@@ -161,7 +162,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       past,
       future: [],
       pendingPlan: null,
-      notice: `${plan.title} applied`,
+      notice: translate("notice.applied", { label: plan.title }),
     });
     persist(result.project);
   },
@@ -178,7 +179,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       past: state.past.slice(0, -1),
       future: [{ label: previous.label, project: state.project }, ...state.future],
       pendingPlan: null,
-      notice: `Undid ${previous.label}`,
+      notice: translate("notice.undid", { label: previous.label }),
     });
     persist(restored);
   },
@@ -194,7 +195,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       past: [...state.past, { label: next.label, project: state.project }],
       future: state.future.slice(1),
       pendingPlan: null,
-      notice: `Redid ${next.label}`,
+      notice: translate("notice.redid", { label: next.label }),
     });
     persist(restored);
   },
@@ -205,13 +206,13 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       try {
         asset = await probeMediaFile(file);
       } catch (error) {
-        throw new Error(`Could not read ${file.name}.`, { cause: error });
+        throw new Error(translate("error.readFile", { name: file.name }), { cause: error });
       }
       let url: string;
       try {
         url = await registerAssetFile(asset.id, file);
       } catch (error) {
-        throw new Error(`Could not store ${file.name} in this browser.`, {
+        throw new Error(translate("error.storeFile", { name: file.name }), {
           cause: error,
         });
       }
@@ -246,7 +247,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
           fadeOut: 0,
         },
       });
-      get().commitOperations(`Import ${asset.name}`, operations);
+      get().commitOperations(translate("edit.import", { name: asset.name }), operations);
       set((current) => ({
         assetUrls: { ...current.assetUrls, [asset.id]: url },
       }));

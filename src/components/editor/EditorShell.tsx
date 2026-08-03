@@ -10,12 +10,14 @@ import { useEditorStore } from "@/store/editor-store";
 import { usePlaybackClock } from "./usePlaybackClock";
 import { useEditorShortcuts } from "./useEditorShortcuts";
 import { ExportDialog } from "./ExportDialog";
+import { useI18n } from "@/i18n";
 
 export function EditorShell() {
   const initialize = useEditorStore((state) => state.initialize);
   const ready = useEditorStore((state) => state.ready);
   const notice = useEditorStore((state) => state.notice);
   const setNotice = useEditorStore((state) => state.setNotice);
+  const { t } = useI18n();
   const initialized = useRef(false);
 
   usePlaybackClock();
@@ -38,7 +40,7 @@ export function EditorShell() {
 
   if (!ready) {
     return (
-      <main className="loading-shell" aria-label="Loading Vibe Cut">
+      <main className="loading-shell" aria-label={t("app.loading")}>
         <div className="loading-block" aria-hidden="true" />
       </main>
     );
@@ -47,7 +49,7 @@ export function EditorShell() {
   return (
     <main className="editor-shell">
       <TopBar />
-      <section className="workspace" aria-label="Video editor workspace">
+      <section className="workspace" aria-label={t("app.workspace")}>
         <MediaPanel />
         <PreviewStage />
         <RightPanel />

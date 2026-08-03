@@ -3,12 +3,14 @@
 import { useState } from "react";
 import { AiPanel } from "./ai/AiPanel";
 import { Inspector } from "./Inspector";
+import { useI18n } from "@/i18n";
 
 export function RightPanel() {
   const [tab, setTab] = useState<"vibe" | "inspector">("vibe");
+  const { t } = useI18n();
   return (
-    <aside className="panel right-panel" aria-label="Editing controls">
-      <div className="right-tabs" role="tablist" aria-label="Editing controls">
+    <aside className="panel right-panel" aria-label={t("panel.editingControls")}>
+      <div className="right-tabs" role="tablist" aria-label={t("panel.editingControls")}>
         <button
           type="button"
           className="right-tab"
@@ -16,7 +18,7 @@ export function RightPanel() {
           aria-selected={tab === "vibe"}
           onClick={() => setTab("vibe")}
         >
-          Vibe
+          {t("panel.vibe")}
         </button>
         <button
           type="button"
@@ -25,7 +27,7 @@ export function RightPanel() {
           aria-selected={tab === "inspector"}
           onClick={() => setTab("inspector")}
         >
-          Inspector
+          {t("panel.inspector")}
         </button>
       </div>
       <div className="right-content">

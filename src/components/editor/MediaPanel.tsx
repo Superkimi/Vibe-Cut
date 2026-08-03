@@ -9,6 +9,7 @@ import {
   UploadSimple,
 } from "@phosphor-icons/react";
 import { useEditorStore } from "@/store/editor-store";
+import { useI18n } from "@/i18n";
 
 function formatDuration(seconds: number): string {
   const minutes = Math.floor(seconds / 60);
@@ -16,7 +17,7 @@ function formatDuration(seconds: number): string {
   return `${minutes}:${String(rest).padStart(2, "0")}`;
 }
 
-function importErrorMessage(error: unknown): string {
+function importErrorMessage(error: unknown, fallback: string): string {
   if (error instanceof Error) {
     return error.message;
   }
@@ -29,7 +30,7 @@ function importErrorMessage(error: unknown): string {
       return [name, message].filter(Boolean).join(": ");
     }
   }
-  return "Import failed";
+  return fallback;
 }
 
 export function MediaPanel() {
@@ -39,6 +40,7 @@ export function MediaPanel() {
   const importFiles = useEditorStore((state) => state.importFiles);
   const setNotice = useEditorStore((state) => state.setNotice);
   const [importing, setImporting] = useState(false);
+  const { t } = useI18n();
 
   const onFiles = async (files: FileList | null) => {
     if (!files?.length) {
@@ -48,7 +50,7 @@ export function MediaPanel() {
     try {
       await importFiles(Array.from(files));
     } catch (error) {
-      setNotice(importErrorMessage(error));
+      setNotice(importErrorMessage(error, t("media.importFailed")));
     } finally {
       setImporting(false);
       if (inputRef.current) {
@@ -58,14 +60,14 @@ export function MediaPanel() {
   };
 
   return (
-    <aside className="panel left-panel" aria-label="Media library">
+    <aside className="panel left-panel" aria-label={t("media.library")}>
       <div className="panel-header">
-        <h2 className="panel-title">Media</h2>
+        <h2 className="panel-title">{t("media.title")}</h2>
         <button
           type="button"
           className="icon-button"
-          aria-label="Import media"
-          title="Import media"
+          aria-label={t("action.importMedia")}
+          title={t("action.importMedia")}
           disabled={importing}
           onClick={() => inputRef.current?.click()}
         >
@@ -85,6 +87,12 @@ export function MediaPanel() {
           <div className="asset-grid">
             {assets.map((asset) => {
               const url = assetUrls[asset.id];
+              const kindLabel =
+                asset.kind === "audio"
+                  ? t("media.audio")
+                  : asset.kind === "image"
+                    ? t("media.image")
+                    : t("media.video");
               return (
                 <button
                   type="button"
@@ -92,7 +100,7 @@ export function MediaPanel() {
                   key={asset.id}
                   title={asset.name}
                   onDoubleClick={() =>
-                    setNotice(`${asset.name} is already on the timeline`)
+                      setNotice(t("media.alreadyOnTimeline", { name: asset.name }))
                   }
                 >
                   <span className="asset-thumb">
@@ -113,7 +121,7 @@ export function MediaPanel() {
                   <span className="asset-meta">
                     <span className="asset-name">{asset.name}</span>
                     <span className="asset-detail">
-                      {asset.kind} {formatDuration(asset.duration)}
+                      {kindLabel} {formatDuration(asset.duration)}
                     </span>
                   </span>
                 </button>
@@ -124,14 +132,14 @@ export function MediaPanel() {
           <div className="empty-state">
             <div>
               <UploadSimple size={30} aria-hidden="true" />
-              <strong>Bring in your first shot</strong>
-              <p>Video, audio, and images stay in your browser.</p>
+              <strong>{t("media.firstShot")}</strong>
+              <p>{t("media.localCopy")}</p>
               <button
                 type="button"
                 className="secondary-button"
                 onClick={() => inputRef.current?.click()}
               >
-                Import media
+                {t("action.importMedia")}
               </button>
             </div>
           </div>
